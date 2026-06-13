@@ -3,17 +3,10 @@ import { useState } from 'react';
 function LoginForm({ onSubmit, error, loading }) {
   const [nisnNiy, setNisnNiy] = useState('');
   const [password, setPassword] = useState('');
-  const [validationError, setValidationError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!/^\d+$/.test(nisnNiy)) {
-      setValidationError('NIY hanya boleh berisi angka');
-      return;
-    }
-
-    setValidationError('');
     onSubmit({ nisn_niy: nisnNiy, password });
   };
 
@@ -26,7 +19,6 @@ function LoginForm({ onSubmit, error, loading }) {
         <input
           id="nisn_niy"
           type="text"
-          inputMode="numeric"
           value={nisnNiy}
           onChange={(e) => setNisnNiy(e.target.value)}
           className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -47,8 +39,8 @@ function LoginForm({ onSubmit, error, loading }) {
           required
         />
       </div>
-      {(validationError || error) && (
-        <p className="text-sm text-red-600">{validationError || error}</p>
+      {error && (
+        <p className="text-sm text-red-600">{error}</p>
       )}
       <button
         type="submit"
