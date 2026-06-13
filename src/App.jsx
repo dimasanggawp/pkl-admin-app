@@ -17,6 +17,7 @@ import TeacherPerformance from './pages/TeacherPerformance';
 import Reports from './pages/Reports';
 import Trash from './pages/Trash';
 import Settings from './pages/Settings';
+import Unauthorized from './pages/Unauthorized';
 
 function LoginRoute() {
   const token = localStorage.getItem('token');
@@ -48,10 +49,11 @@ function App() {
         <Toast />
         <Routes>
           <Route path="/login" element={<LoginRoute />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
           <Route
             path="/"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <Dashboard />
                 </Layout>
@@ -61,7 +63,7 @@ function App() {
           <Route
             path="/students"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <StudentManagement />
                 </Layout>
@@ -71,7 +73,7 @@ function App() {
           <Route
             path="/import"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <DataImport />
                 </Layout>
@@ -81,7 +83,7 @@ function App() {
           <Route
             path="/guru"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <GuruManagement />
                 </Layout>
@@ -91,7 +93,7 @@ function App() {
           <Route
             path="/locations"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <LocationManagement />
                 </Layout>
@@ -101,7 +103,7 @@ function App() {
           <Route
             path="/alerts"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <AlertsMonitoring />
                 </Layout>
@@ -111,7 +113,7 @@ function App() {
           <Route
             path="/monitoring"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <MonitoringRecords />
                 </Layout>
@@ -121,7 +123,7 @@ function App() {
           <Route
             path="/teacher-performance"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <TeacherPerformance />
                 </Layout>
@@ -131,7 +133,7 @@ function App() {
           <Route
             path="/reports"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <Reports />
                 </Layout>
@@ -141,7 +143,7 @@ function App() {
           <Route
             path="/trash"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <Trash />
                 </Layout>
@@ -151,7 +153,7 @@ function App() {
           <Route
             path="/settings"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Layout>
                   <Settings />
                 </Layout>
