@@ -6,6 +6,7 @@ const links = [
   { to: '/import', label: 'Import Data' },
   { to: '/guru', label: 'Data Guru' },
   { to: '/locations', label: 'Lokasi PKL' },
+  { to: '/alerts', label: 'Alert Monitoring' },
   { to: '/reports', label: 'Laporan' },
   { to: '/settings', label: 'Pengaturan' },
 ];
