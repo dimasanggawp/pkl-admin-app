@@ -10,6 +10,7 @@ const links = [
   { to: '/monitoring', label: 'Monitoring Records' },
   { to: '/teacher-performance', label: 'Performa Guru' },
   { to: '/reports', label: 'Laporan' },
+  { to: '/trash', label: 'Trash' },
   { to: '/settings', label: 'Pengaturan' },
 ];
 

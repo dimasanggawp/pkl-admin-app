@@ -15,6 +15,7 @@ import AlertsMonitoring from './pages/AlertsMonitoring';
 import MonitoringRecords from './pages/MonitoringRecords';
 import TeacherPerformance from './pages/TeacherPerformance';
 import Reports from './pages/Reports';
+import Trash from './pages/Trash';
 import Settings from './pages/Settings';
 
 function LoginRoute() {
@@ -133,6 +134,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Reports />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trash"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Trash />
                 </Layout>
               </ProtectedRoute>
             }
