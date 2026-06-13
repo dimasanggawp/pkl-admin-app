@@ -8,6 +8,7 @@ const links = [
   { to: '/locations', label: 'Lokasi PKL' },
   { to: '/alerts', label: 'Alert Monitoring' },
   { to: '/monitoring', label: 'Monitoring Records' },
+  { to: '/teacher-performance', label: 'Performa Guru' },
   { to: '/reports', label: 'Laporan' },
   { to: '/settings', label: 'Pengaturan' },
 ];

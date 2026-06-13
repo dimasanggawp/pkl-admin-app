@@ -13,6 +13,7 @@ import GuruManagement from './pages/GuruManagement';
 import LocationManagement from './pages/LocationManagement';
 import AlertsMonitoring from './pages/AlertsMonitoring';
 import MonitoringRecords from './pages/MonitoringRecords';
+import TeacherPerformance from './pages/TeacherPerformance';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 
@@ -112,6 +113,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <MonitoringRecords />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher-performance"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <TeacherPerformance />
                 </Layout>
               </ProtectedRoute>
             }
