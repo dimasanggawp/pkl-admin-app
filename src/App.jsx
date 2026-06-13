@@ -12,6 +12,7 @@ import DataImport from './pages/DataImport';
 import GuruManagement from './pages/GuruManagement';
 import LocationManagement from './pages/LocationManagement';
 import AlertsMonitoring from './pages/AlertsMonitoring';
+import MonitoringRecords from './pages/MonitoringRecords';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 
@@ -101,6 +102,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <AlertsMonitoring />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/monitoring"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MonitoringRecords />
                 </Layout>
               </ProtectedRoute>
             }
