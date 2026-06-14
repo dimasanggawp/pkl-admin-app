@@ -73,10 +73,10 @@ function Trash() {
       label: 'Aksi',
       render: (row) => (
         <div className="space-x-2">
-          <button onClick={() => handleRestore(row)} className="text-green-600 hover:underline">
+          <button onClick={() => handleRestore(row)} className="text-success hover:underline">
             Restore
           </button>
-          <button onClick={() => handlePermanentDelete(row)} className="text-red-600 hover:underline">
+          <button onClick={() => handlePermanentDelete(row)} className="text-danger hover:underline">
             Hapus Permanen
           </button>
         </div>
@@ -86,10 +86,10 @@ function Trash() {
 
   return (
     <div className="p-4 sm:p-6">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6">Trash</h1>
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink mb-6">Trash</h1>
 
       {error && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+        <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-sm text-warning">
           Data trash belum tersedia: {error}
         </div>
       )}
@@ -99,8 +99,8 @@ function Trash() {
           <button
             key={t}
             onClick={() => setType(t)}
-            className={`px-4 py-2 rounded capitalize ${
-              type === t ? 'bg-blue-600 text-white' : 'bg-white border hover:bg-gray-50'
+            className={`px-4 py-2 rounded-xl capitalize text-sm font-medium transition-colors ${
+              type === t ? 'bg-accent text-white' : 'bg-surface border border-border text-ink hover:bg-surface-alt'
             }`}
           >
             {t}
@@ -114,13 +114,13 @@ function Trash() {
           placeholder="Cari item yang dihapus..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] px-4 py-2 border rounded-lg"
+          className="field-input flex-1 min-w-[200px]"
         />
       </FilterPanel>
 
       <div className="mt-6">
         {loading ? (
-          <div className="p-6 text-center text-gray-500">Memuat data trash...</div>
+          <div className="p-6 text-center text-muted">Memuat data trash...</div>
         ) : (
           <DataTable columns={columns} data={items} emptyMessage="Trash kosong" />
         )}

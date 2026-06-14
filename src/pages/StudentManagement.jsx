@@ -86,8 +86,8 @@ function StudentManagement() {
         const active = row.User?.is_active ?? row.is_active ?? true;
         return (
           <span
-            className={`px-3 py-1 rounded text-sm ${
-              active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+            className={`badge ${
+              active ? 'bg-success/10 text-success' : 'bg-surface-alt text-muted'
             }`}
           >
             {active ? 'active' : 'inactive'}
@@ -105,11 +105,11 @@ function StudentManagement() {
               setEditingStudent(row);
               setShowForm(true);
             }}
-            className="text-blue-600 hover:underline"
+            className="text-accent hover:underline"
           >
             Edit
           </button>
-          <button onClick={() => handleDelete(row.id)} className="text-red-600 hover:underline">
+          <button onClick={() => handleDelete(row.id)} className="text-danger hover:underline">
             Hapus
           </button>
         </div>
@@ -120,20 +120,20 @@ function StudentManagement() {
   return (
     <div className="p-4 sm:p-6">
       <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Data Siswa</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">Data Siswa</h1>
         <button
           onClick={() => {
             setEditingStudent(null);
             setShowForm(!showForm);
           }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+          className="btn-primary"
         >
           {showForm ? 'Batal' : 'Tambah Siswa'}
         </button>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+        <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-sm text-warning">
           Data siswa belum tersedia: {error}
         </div>
       )}
@@ -148,7 +148,7 @@ function StudentManagement() {
             setSearch(e.target.value);
             setCurrentPage(1);
           }}
-          className="flex-1 min-w-[200px] px-4 py-2 border rounded-lg"
+          className="field-input flex-1 min-w-[200px]"
         />
         <select
           value={statusFilter}
@@ -156,7 +156,7 @@ function StudentManagement() {
             setStatusFilter(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-4 py-2 border rounded-lg"
+          className="field-input w-auto"
         >
           <option value="all">Semua Status</option>
           <option value="active">Active</option>
@@ -174,7 +174,7 @@ function StudentManagement() {
       {/* Student Table */}
       <div className="mt-6">
         {loading ? (
-          <div className="p-6 text-center text-gray-500">Memuat data siswa...</div>
+          <div className="p-6 text-center text-muted">Memuat data siswa...</div>
         ) : (
           <DataTable columns={columns} data={students} emptyMessage="Tidak ada siswa ditemukan" />
         )}
@@ -187,8 +187,8 @@ function StudentManagement() {
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-2 rounded ${
-                currentPage === page ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentPage === page ? 'bg-accent text-white' : 'bg-surface-alt text-ink hover:bg-border'
               }`}
             >
               {page}
@@ -217,8 +217,8 @@ function StudentForm({ student, onSave, onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-4 sm:p-6">
-      <h3 className="text-xl font-bold mb-4">{student ? 'Edit' : 'Tambah'} Siswa</h3>
+    <form onSubmit={handleSubmit} className="panel p-4 sm:p-6">
+      <h3 className="text-xl font-bold text-ink mb-4">{student ? 'Edit' : 'Tambah'} Siswa</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <input
@@ -226,7 +226,7 @@ function StudentForm({ student, onSave, onCancel }) {
           placeholder="NISN"
           value={formData.nisn}
           onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
-          className="px-4 py-2 border rounded"
+          className="field-input"
           required
         />
         <input
@@ -234,7 +234,7 @@ function StudentForm({ student, onSave, onCancel }) {
           placeholder="Nama Lengkap"
           value={formData.nama}
           onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-          className="px-4 py-2 border rounded"
+          className="field-input"
           required
         />
         <input
@@ -242,33 +242,29 @@ function StudentForm({ student, onSave, onCancel }) {
           placeholder="Kelas"
           value={formData.kelas}
           onChange={(e) => setFormData({ ...formData, kelas: e.target.value })}
-          className="px-4 py-2 border rounded"
+          className="field-input"
         />
         <input
           type="text"
           placeholder="Sekolah"
           value={formData.sekolah}
           onChange={(e) => setFormData({ ...formData, sekolah: e.target.value })}
-          className="px-4 py-2 border rounded"
+          className="field-input"
         />
         <input
           type="text"
           placeholder="Tempat PKL"
           value={formData.tempat_pkl}
           onChange={(e) => setFormData({ ...formData, tempat_pkl: e.target.value })}
-          className="px-4 py-2 border rounded md:col-span-2"
+          className="field-input md:col-span-2"
         />
       </div>
 
       <div className="flex gap-2 mt-4">
-        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+        <button type="submit" className="btn-primary">
           Simpan
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
-        >
+        <button type="button" onClick={onCancel} className="btn-secondary">
           Batal
         </button>
       </div>

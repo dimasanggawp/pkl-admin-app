@@ -76,12 +76,12 @@ function AlertsMonitoring() {
       label: 'Status',
       render: (row) => {
         const colors = {
-          unread: 'bg-red-100 text-red-700',
-          read: 'bg-yellow-100 text-yellow-700',
-          acted: 'bg-green-100 text-green-700',
+          unread: 'bg-danger/10 text-danger',
+          read: 'bg-warning/10 text-warning',
+          acted: 'bg-success/10 text-success',
         };
         return (
-          <span className={`px-3 py-1 rounded text-sm ${colors[row.status_alert] || 'bg-gray-100 text-gray-700'}`}>
+          <span className={`badge ${colors[row.status_alert] || 'bg-surface-alt text-muted'}`}>
             {row.status_alert || '-'}
           </span>
         );
@@ -92,17 +92,14 @@ function AlertsMonitoring() {
   return (
     <div className="p-4 sm:p-6">
       <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Alert Monitoring</h1>
-        <button
-          onClick={handleExport}
-          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg"
-        >
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">Alert Monitoring</h1>
+        <button onClick={handleExport} className="btn-secondary">
           Export Alerts
         </button>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+        <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-sm text-warning">
           Data alert belum tersedia: {error}
         </div>
       )}
@@ -124,8 +121,8 @@ function AlertsMonitoring() {
               setFilter(status);
               setPage(1);
             }}
-            className={`px-4 py-2 rounded ${
-              filter === status ? 'bg-blue-600 text-white' : 'bg-white border'
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              filter === status ? 'bg-accent text-white' : 'bg-surface border border-border text-ink hover:bg-surface-alt'
             }`}
           >
             {status}
@@ -136,7 +133,7 @@ function AlertsMonitoring() {
       {/* Alerts Table */}
       <div className="mt-6">
         {loading ? (
-          <div className="p-6 text-center text-gray-500">Memuat data alert...</div>
+          <div className="p-6 text-center text-muted">Memuat data alert...</div>
         ) : (
           <DataTable columns={columns} data={alerts} emptyMessage="Tidak ada alert ditemukan" />
         )}
@@ -149,7 +146,7 @@ function AlertsMonitoring() {
             <button
               key={p}
               onClick={() => setPage(p)}
-              className={`px-3 py-2 rounded ${page === p ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === p ? 'bg-accent text-white' : 'bg-surface-alt text-ink hover:bg-border'}`}
             >
               {p}
             </button>

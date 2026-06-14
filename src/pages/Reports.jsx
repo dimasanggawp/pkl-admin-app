@@ -48,15 +48,15 @@ function Reports() {
 
   return (
     <div className="p-4 sm:p-6 max-w-2xl">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6">Generate Laporan</h1>
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink mb-6">Generate Laporan</h1>
 
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6 space-y-4">
+      <div className="panel p-4 sm:p-6 space-y-4">
         <div>
-          <label className="block text-gray-700 font-bold mb-2">Jenis Laporan</label>
+          <label className="block text-ink font-bold mb-2">Jenis Laporan</label>
           <select
             value={reportType}
             onChange={(e) => setReportType(e.target.value)}
-            className="w-full px-4 py-2 border rounded"
+            className="field-input"
           >
             {REPORT_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
@@ -67,8 +67,8 @@ function Reports() {
         </div>
 
         <div>
-          <label className="block text-gray-700 font-bold mb-2">Format</label>
-          <select value={format} onChange={(e) => setFormat(e.target.value)} className="w-full px-4 py-2 border rounded">
+          <label className="block text-ink font-bold mb-2">Format</label>
+          <select value={format} onChange={(e) => setFormat(e.target.value)} className="field-input">
             {FORMATS.map((f) => (
               <option key={f.value} value={f.value}>
                 {f.label}
@@ -79,21 +79,21 @@ function Reports() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-700 font-bold mb-2">Dari Tanggal</label>
+            <label className="block text-ink font-bold mb-2">Dari Tanggal</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full px-4 py-2 border rounded"
+              className="field-input"
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-bold mb-2">Sampai Tanggal</label>
+            <label className="block text-ink font-bold mb-2">Sampai Tanggal</label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="w-full px-4 py-2 border rounded"
+              className="field-input"
             />
           </div>
         </div>
@@ -101,7 +101,7 @@ function Reports() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2 rounded-lg transition"
+          className="btn-primary w-full"
         >
           {exporting ? 'Generating...' : 'Generate Laporan'}
         </button>

@@ -82,14 +82,14 @@ function MonitoringRecords() {
   return (
     <div className="p-4 sm:p-6">
       <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Monitoring Records</h1>
-        <button onClick={handleExport} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">Monitoring Records</h1>
+        <button onClick={handleExport} className="btn-secondary">
           Export Records
         </button>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+        <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-sm text-warning">
           Data monitoring belum tersedia: {error}
         </div>
       )}
@@ -112,14 +112,14 @@ function MonitoringRecords() {
             setFilter(e.target.value);
             setPage(1);
           }}
-          className="flex-1 min-w-[200px] px-4 py-2 border rounded-lg"
+          className="field-input flex-1 min-w-[200px]"
         />
       </FilterPanel>
 
       {/* Table */}
       <div className="mt-6">
         {loading ? (
-          <div className="p-6 text-center text-gray-500">Memuat data monitoring...</div>
+          <div className="p-6 text-center text-muted">Memuat data monitoring...</div>
         ) : (
           <DataTable columns={columns} data={records} emptyMessage="Tidak ada catatan monitoring ditemukan" />
         )}
@@ -132,7 +132,7 @@ function MonitoringRecords() {
             <button
               key={p}
               onClick={() => setPage(p)}
-              className={`px-3 py-2 rounded ${page === p ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === p ? 'bg-accent text-white' : 'bg-surface-alt text-ink hover:bg-border'}`}
             >
               {p}
             </button>

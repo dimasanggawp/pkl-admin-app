@@ -118,22 +118,22 @@ function LocationManagement() {
 
   return (
     <div className="p-4 sm:p-6">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6">Lokasi PKL</h1>
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink mb-6">Lokasi PKL</h1>
 
       {error && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+        <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-sm text-warning">
           Data siswa belum tersedia: {error}
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Form */}
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6 lg:col-span-1">
-          <h2 className="text-xl font-bold mb-4">
+        <div className="panel p-4 sm:p-6 lg:col-span-1">
+          <h2 className="text-xl font-bold text-ink mb-4">
             {editingId ? 'Edit Lokasi PKL' : 'Atur Lokasi PKL'}
           </h2>
 
-          <label className="block text-sm text-gray-600 mb-1">Siswa</label>
+          <label className="field-label">Siswa</label>
           <select
             value={editingId || ''}
             onChange={(e) => {
@@ -141,7 +141,7 @@ function LocationManagement() {
               if (siswa) handleEdit(siswa);
               else resetForm();
             }}
-            className="w-full px-4 py-2 border rounded mb-3"
+            className="field-input mb-3"
           >
             <option value="">-- Pilih Siswa --</option>
             {students.map((s) => (
@@ -156,14 +156,14 @@ function LocationManagement() {
             placeholder="Nama Tempat PKL"
             value={tempatPkl}
             onChange={(e) => setTempatPkl(e.target.value)}
-            className="w-full px-4 py-2 border rounded mb-3"
+            className="field-input mb-3"
           />
           <input
             type="number"
             placeholder="Latitude"
             value={latitude}
             onChange={(e) => setLatitude(e.target.value)}
-            className="w-full px-4 py-2 border rounded mb-3"
+            className="field-input mb-3"
             step="0.0001"
           />
           <input
@@ -171,7 +171,7 @@ function LocationManagement() {
             placeholder="Longitude"
             value={longitude}
             onChange={(e) => setLongitude(e.target.value)}
-            className="w-full px-4 py-2 border rounded mb-3"
+            className="field-input mb-3"
             step="0.0001"
           />
           <input
@@ -179,60 +179,60 @@ function LocationManagement() {
             placeholder="Radius (meter)"
             value={radius}
             onChange={(e) => setRadius(e.target.value)}
-            className="w-full px-4 py-2 border rounded mb-4"
+            className="field-input mb-4"
           />
 
           <div className="flex gap-2">
             <button
               onClick={handleSave}
               disabled={!editingId}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2 rounded"
+              className="btn-primary flex-1"
             >
               Simpan
             </button>
-            <button onClick={resetForm} className="flex-1 bg-gray-400 hover:bg-gray-500 text-white py-2 rounded">
+            <button onClick={resetForm} className="btn-secondary flex-1">
               Batal
             </button>
           </div>
         </div>
 
         {/* List */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow p-4 sm:p-6">
-          <h2 className="text-xl font-bold mb-4">Daftar Lokasi PKL</h2>
+        <div className="lg:col-span-2 panel p-4 sm:p-6">
+          <h2 className="text-xl font-bold text-ink mb-4">Daftar Lokasi PKL</h2>
           {loading ? (
-            <div className="p-4 text-center text-gray-500">Memuat data siswa...</div>
+            <div className="p-4 text-center text-muted">Memuat data siswa...</div>
           ) : locations.length > 0 ? (
             <div className="space-y-3">
               {locations.map((loc) => (
                 <div
                   key={loc.id}
-                  className="p-4 border rounded hover:bg-gray-50 flex justify-between items-start gap-2"
+                  className="p-4 border border-border rounded-xl hover:bg-surface-alt flex justify-between items-start gap-2"
                 >
                   <div>
-                    <p className="font-bold">{loc.tempat_pkl}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-bold text-ink">{loc.tempat_pkl}</p>
+                    <p className="text-sm text-muted">
                       {loc.nama} ({loc.nisn})
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted">
                       Lat: {Number(loc.lat_pkl).toFixed(4)}, Lon: {Number(loc.lon_pkl).toFixed(4)}, Radius:{' '}
                       {Math.round((loc.radius_km || 0) * 1000)}m
                     </p>
                   </div>
-                  <button onClick={() => handleEdit(loc)} className="text-blue-600 hover:underline">
+                  <button onClick={() => handleEdit(loc)} className="text-accent hover:underline">
                     Edit
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-gray-500 text-center p-4">Belum ada lokasi PKL terdaftar</div>
+            <div className="text-muted text-center p-4">Belum ada lokasi PKL terdaftar</div>
           )}
         </div>
       </div>
 
       {/* Map */}
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-        <h2 className="text-xl font-bold mb-4">Peta Lokasi PKL</h2>
+      <div className="panel p-4 sm:p-6">
+        <h2 className="text-xl font-bold text-ink mb-4">Peta Lokasi PKL</h2>
         <div className="h-96">
           <MapContainer center={mapCenter} zoom={12} scrollWheelZoom={true} className="h-full w-full">
             <TileLayer

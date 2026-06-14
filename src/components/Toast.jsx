@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
 const TOAST_STYLES = {
-  success: 'bg-green-500',
-  error: 'bg-red-500',
-  info: 'bg-blue-500',
+  success: 'border-success/30 text-success before:bg-success',
+  error: 'border-danger/30 text-danger before:bg-danger',
+  info: 'border-border text-ink before:bg-accent',
 };
 
 export default function Toast() {
@@ -24,11 +24,11 @@ export default function Toast() {
   }, []);
 
   return (
-    <div className="fixed bottom-4 right-4 space-y-2 z-50">
+    <div className="fixed bottom-4 right-4 z-50 space-y-2 max-w-[calc(100vw-2rem)]">
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`px-4 py-3 rounded-lg text-white shadow-lg ${
+          className={`relative overflow-hidden rounded-xl border bg-surface pl-4 pr-4 py-3 shadow-lift font-medium text-sm text-ink before:absolute before:left-0 before:top-0 before:h-full before:w-1 ${
             TOAST_STYLES[toast.type] || TOAST_STYLES.info
           }`}
         >

@@ -59,8 +59,8 @@ function GuruManagement() {
         const active = row.User?.is_active ?? row.is_active ?? true;
         return (
           <span
-            className={`px-3 py-1 rounded text-sm ${
-              active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+            className={`badge ${
+              active ? 'bg-success/10 text-success' : 'bg-surface-alt text-muted'
             }`}
           >
             {active ? 'active' : 'inactive'}
@@ -72,7 +72,7 @@ function GuruManagement() {
       key: 'actions',
       label: 'Aksi',
       render: (row) => (
-        <button onClick={() => handleToggleStatus(row)} className="text-blue-600 hover:underline">
+        <button onClick={() => handleToggleStatus(row)} className="text-accent hover:underline">
           Toggle Status
         </button>
       ),
@@ -81,10 +81,10 @@ function GuruManagement() {
 
   return (
     <div className="p-4 sm:p-6">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6">Data Guru</h1>
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink mb-6">Data Guru</h1>
 
       {error && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+        <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-sm text-warning">
           Data guru belum tersedia: {error}
         </div>
       )}
@@ -95,13 +95,13 @@ function GuruManagement() {
           placeholder="Cari nama atau NIY..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] px-4 py-2 border rounded-lg"
+          className="field-input flex-1 min-w-[200px]"
         />
       </FilterPanel>
 
       <div className="mt-6">
         {loading ? (
-          <div className="p-6 text-center text-gray-500">Memuat data guru...</div>
+          <div className="p-6 text-center text-muted">Memuat data guru...</div>
         ) : (
           <DataTable columns={columns} data={gurus} emptyMessage="Tidak ada guru ditemukan" />
         )}

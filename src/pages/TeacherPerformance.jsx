@@ -15,13 +15,25 @@ import API from '../services/api';
 import { showError, getErrorMessage } from '../services/toastService';
 import StatsCard from '../components/admin/StatsCard';
 import DataTable from '../components/admin/DataTable';
+import useTheme from '../hooks/useTheme';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
+
+function useChartColors() {
+  const { theme } = useTheme();
+  return useMemo(() => {
+    if (theme === 'dark') {
+      return { text: '#E8EAEF', muted: '#8E96A5', grid: '#292F3C', accent: '#6390FF', success: '#34C799' };
+    }
+    return { text: '#11181C', muted: '#6E7784', grid: '#E4E7EC', accent: '#2554FF', success: '#10A37F' };
+  }, [theme]);
+}
 
 function TeacherPerformance() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const colors = useChartColors();
 
   useEffect(() => {
     const fetchPerformance = async () => {
@@ -62,10 +74,10 @@ function TeacherPerformance() {
     () => ({
       labels: data?.reviewChart?.labels || [],
       datasets: data?.reviewChart?.datasets || [
-        { label: 'Jumlah Review', data: [], backgroundColor: 'rgba(59, 130, 246, 0.6)' },
+        { label: 'Jumlah Review', data: [], backgroundColor: `${colors.accent}99`, borderRadius: 4 },
       ],
     }),
-    [data]
+    [data, colors]
   );
 
   const loginChartData = useMemo(
@@ -75,12 +87,29 @@ function TeacherPerformance() {
         {
           label: 'Jumlah Login',
           data: [],
-          borderColor: 'rgb(34, 197, 94)',
-          backgroundColor: 'rgba(34, 197, 94, 0.5)',
+          borderColor: colors.success,
+          backgroundColor: `${colors.success}33`,
+          tension: 0.35,
+          fill: true,
         },
       ],
     }),
-    [data]
+    [data, colors]
+  );
+
+  const chartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: colors.text, font: { family: 'Manrope' } } },
+      },
+      scales: {
+        x: { ticks: { color: colors.muted, font: { family: 'Manrope' } }, grid: { color: colors.grid } },
+        y: { ticks: { color: colors.muted, font: { family: 'Manrope' } }, grid: { color: colors.grid } },
+      },
+    }),
+    [colors]
   );
 
   const teachers = data?.teachers || [];
@@ -99,20 +128,20 @@ function TeacherPerformance() {
   return (
     <div className="p-4 sm:p-6">
       <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Performa Guru</h1>
-        <button onClick={handleExport} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">Performa Guru</h1>
+        <button onClick={handleExport} className="btn-secondary">
           Export Reports
         </button>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+        <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-sm text-warning">
           Data performa guru belum tersedia: {error}
         </div>
       )}
 
       {loading ? (
-        <div className="p-6 text-center text-gray-500">Memuat data performa guru...</div>
+        <div className="p-6 text-center text-muted">Memuat data performa guru...</div>
       ) : (
         <>
           {/* Statistics Cards */}
@@ -124,30 +153,24 @@ function TeacherPerformance() {
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-              <h2 className="text-lg font-bold mb-4">Jumlah Review</h2>
+            <div className="panel p-4 sm:p-6">
+              <h2 className="text-lg font-bold text-ink mb-4">Jumlah Review</h2>
               <div className="h-64">
-                <Bar
-                  data={reviewChartData}
-                  options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }}
-                />
+                <Bar data={reviewChartData} options={chartOptions} />
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-              <h2 className="text-lg font-bold mb-4">Frekuensi Login</h2>
+            <div className="panel p-4 sm:p-6">
+              <h2 className="text-lg font-bold text-ink mb-4">Frekuensi Login</h2>
               <div className="h-64">
-                <Line
-                  data={loginChartData}
-                  options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }}
-                />
+                <Line data={loginChartData} options={chartOptions} />
               </div>
             </div>
           </div>
 
           {/* Teacher Rankings */}
           <div>
-            <h2 className="text-lg font-bold mb-4">Peringkat Guru</h2>
+            <h2 className="text-lg font-bold text-ink mb-4">Peringkat Guru</h2>
             <DataTable columns={columns} data={teachers} emptyMessage="Belum ada data performa guru" />
           </div>
         </>

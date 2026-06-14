@@ -1,3 +1,89 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg: 248 249 251;          /* #F8F9FB */
+  --surface: 255 255 255;     /* #FFFFFF */
+  --surface-alt: 243 244 247; /* #F3F4F7 */
+  --border: 228 231 236;      /* #E4E7EC */
+  --text: 17 24 28;           /* #11181C */
+  --muted: 110 119 132;       /* #6E7784 */
+  --accent: 37 84 255;        /* #2554FF */
+  --accent-soft: 230 235 255; /* #E6EBFF */
+  --success: 16 163 127;      /* #10A37F */
+  --danger: 224 60 60;        /* #E03C3C */
+  --warning: 217 119 6;       /* #D97706 */
+}
+
+.dark {
+  --bg: 11 14 20;             /* #0B0E14 */
+  --surface: 21 25 34;        /* #151922 */
+  --surface-alt: 28 33 44;    /* #1C212C */
+  --border: 41 47 60;         /* #292F3C */
+  --text: 232 234 239;        /* #E8EAEF */
+  --muted: 142 150 165;       /* #8E96A5 */
+  --accent: 99 144 255;       /* #6390FF */
+  --accent-soft: 30 41 71;    /* #1E2947 */
+  --success: 52 199 153;      /* #34C799 */
+  --danger: 248 113 113;      /* #F87171 */
+  --warning: 251 191 36;      /* #FBBF24 */
+}
+
+@layer base {
+  html {
+    font-feature-settings: 'tnum' 1;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-bg text-ink font-sans antialiased transition-colors duration-200;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply bg-surface border border-border rounded-2xl shadow-card;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5
+      font-semibold text-white transition-colors duration-150
+      hover:bg-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5
+      font-semibold text-ink transition-colors duration-150
+      hover:border-accent hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2
+      font-medium text-muted transition-colors duration-150
+      hover:bg-surface-alt hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent;
+  }
+
+  .field-label {
+    @apply block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5;
+  }
+
+  .field-input {
+    @apply w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-ink placeholder:text-muted/60
+      transition-colors duration-150 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent;
+  }
+
+  .kicker {
+    @apply text-xs font-bold uppercase tracking-widest text-accent;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+}

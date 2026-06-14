@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
@@ -30,12 +31,14 @@ function LoginRoute() {
 }
 
 function Layout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <div className="flex flex-1 flex-col sm:flex-row">
-        <Sidebar />
-        <main className="flex-1">{children}</main>
+    <div className="min-h-screen flex flex-col bg-bg">
+      <Header onMenuClick={() => setSidebarOpen(true)} />
+      <div className="flex flex-1">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <main className="flex-1 min-w-0">{children}</main>
       </div>
       <Footer />
     </div>

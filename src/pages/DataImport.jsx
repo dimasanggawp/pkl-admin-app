@@ -104,26 +104,26 @@ function DataImport() {
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6">Import Data Siswa</h1>
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink mb-6">Import Data Siswa</h1>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <p className="text-blue-700 mb-2">
+      <div className="rounded-2xl border border-accent/20 bg-accent-soft p-4 mb-6">
+        <p className="text-ink mb-2">
           Gunakan template Excel berikut agar format kolom sesuai dengan yang diharapkan sistem
           (NISN, Nama, Email, Kelas, Sekolah, Tempat PKL, dll).
         </p>
-        <button onClick={downloadTemplate} className="text-blue-600 hover:underline font-bold">
+        <button onClick={downloadTemplate} className="text-accent hover:underline font-bold">
           Download Template
         </button>
       </div>
 
       {/* File Upload */}
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
-        <label className="block text-gray-700 font-bold mb-4">Pilih File Excel</label>
+      <div className="panel p-4 sm:p-6 mb-6">
+        <label className="block text-ink font-bold mb-4">Pilih File Excel</label>
         <input
           type="file"
           accept=".xlsx,.xls,.csv"
           onChange={handleFileSelect}
-          className="w-full mb-4"
+          className="w-full mb-4 text-sm text-muted"
         />
 
         {file && (
@@ -131,14 +131,14 @@ function DataImport() {
             <button
               onClick={handlePreview}
               disabled={previewing}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2 rounded-lg transition"
+              className="btn-secondary flex-1"
             >
               {previewing ? 'Memuat preview...' : 'Preview Data'}
             </button>
             <button
               onClick={handleImport}
               disabled={importing}
-              className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-2 rounded-lg transition"
+              className="btn-primary flex-1"
             >
               {importing ? 'Mengimpor...' : 'Import Data'}
             </button>
@@ -148,39 +148,39 @@ function DataImport() {
 
       {/* Preview */}
       {preview && (
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
-          <h2 className="text-lg font-bold mb-2">Preview</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <div className="panel p-4 sm:p-6 mb-6">
+          <h2 className="text-lg font-bold text-ink mb-2">Preview</h2>
+          <p className="text-sm text-muted mb-4">
             Total baris: {preview.totalRows} | Valid: {preview.validCount} | Error:{' '}
             {preview.errorCount}
           </p>
 
           {preview.valid?.length > 0 && (
             <div className="overflow-x-auto mb-4">
-              <table className="min-w-full text-sm text-left border">
-                <thead className="bg-gray-100">
+              <table className="min-w-full text-sm text-left border border-border rounded-xl">
+                <thead className="bg-surface-alt">
                   <tr>
-                    <th className="px-3 py-2">NISN</th>
-                    <th className="px-3 py-2">Nama</th>
-                    <th className="px-3 py-2">Kelas</th>
-                    <th className="px-3 py-2">Sekolah</th>
-                    <th className="px-3 py-2">Tempat PKL</th>
+                    <th className="px-3 py-2 text-ink">NISN</th>
+                    <th className="px-3 py-2 text-ink">Nama</th>
+                    <th className="px-3 py-2 text-ink">Kelas</th>
+                    <th className="px-3 py-2 text-ink">Sekolah</th>
+                    <th className="px-3 py-2 text-ink">Tempat PKL</th>
                   </tr>
                 </thead>
                 <tbody>
                   {preview.valid.slice(0, 5).map((row, idx) => (
-                    <tr key={idx} className="border-t">
-                      <td className="px-3 py-2">{row.nisn}</td>
-                      <td className="px-3 py-2">{row.nama}</td>
-                      <td className="px-3 py-2">{row.kelas || '-'}</td>
-                      <td className="px-3 py-2">{row.sekolah || '-'}</td>
-                      <td className="px-3 py-2">{row.tempat_pkl || '-'}</td>
+                    <tr key={idx} className="border-t border-border">
+                      <td className="px-3 py-2 text-ink">{row.nisn}</td>
+                      <td className="px-3 py-2 text-ink">{row.nama}</td>
+                      <td className="px-3 py-2 text-ink">{row.kelas || '-'}</td>
+                      <td className="px-3 py-2 text-ink">{row.sekolah || '-'}</td>
+                      <td className="px-3 py-2 text-ink">{row.tempat_pkl || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               {preview.valid.length > 5 && (
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-muted mt-1">
                   Menampilkan 5 dari {preview.valid.length} baris valid.
                 </p>
               )}
@@ -188,9 +188,9 @@ function DataImport() {
           )}
 
           {preview.errors?.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <h3 className="font-bold text-red-700 mb-2">Error pada {preview.errors.length} baris</h3>
-              <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+            <div className="rounded-xl border border-danger/25 bg-danger/10 p-3">
+              <h3 className="font-bold text-danger mb-2">Error pada {preview.errors.length} baris</h3>
+              <ul className="text-sm text-danger space-y-1 list-disc list-inside">
                 {preview.errors.slice(0, 10).map((err, idx) => (
                   <li key={idx}>
                     Baris {err.row} ({err.nisn || '-'}): {err.errors?.join(', ')}
@@ -204,9 +204,9 @@ function DataImport() {
 
       {/* Import Result */}
       {result && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-          <p className="text-green-700 font-bold mb-1">Import selesai</p>
-          <p className="text-sm text-green-700">
+        <div className="rounded-2xl border border-success/25 bg-success/10 p-4 mb-6">
+          <p className="text-success font-bold mb-1">Import selesai</p>
+          <p className="text-sm text-success">
             Total baris: {result.totalRows} | Berhasil diimpor: {result.importedCount} | Dilewati:{' '}
             {result.skippedCount}
           </p>

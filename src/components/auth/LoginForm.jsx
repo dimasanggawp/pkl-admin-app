@@ -11,9 +11,9 @@ function LoginForm({ onSubmit, error, loading }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="nisn_niy">
+        <label className="field-label" htmlFor="nisn_niy">
           NIY
         </label>
         <input
@@ -21,33 +21,46 @@ function LoginForm({ onSubmit, error, loading }) {
           type="text"
           value={nisnNiy}
           onChange={(e) => setNisnNiy(e.target.value)}
-          className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="field-input"
           placeholder="Masukkan NIY"
+          autoComplete="username"
           required
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">
-          Password
+        <label className="field-label" htmlFor="password">
+          Kata Sandi
         </label>
         <input
           id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="field-input"
+          placeholder="••••••••"
+          autoComplete="current-password"
           required
         />
       </div>
+
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
+          {error}
+        </p>
       )}
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-blue-600 text-white rounded px-4 py-2 font-medium hover:bg-blue-700 disabled:opacity-50"
-      >
-        {loading ? 'Logging in...' : 'Login'}
+
+      <button type="submit" disabled={loading} className="btn-primary mt-1 py-3">
+        {loading ? (
+          <>
+            <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+            Memproses...
+          </>
+        ) : (
+          <>
+            Masuk
+            <span aria-hidden="true">&rarr;</span>
+          </>
+        )}
       </button>
     </form>
   );
