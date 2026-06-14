@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import API from '../services/api';
-import { showSuccess, showError, getErrorMessage } from '../services/toastService';
+import { showSuccess, showError, getErrorMessage, confirmAction } from '../services/toastService';
 import DataTable from '../components/admin/DataTable';
 import FilterPanel from '../components/admin/FilterPanel';
 
@@ -46,7 +46,14 @@ function Trash() {
   };
 
   const handlePermanentDelete = async (item) => {
-    if (!window.confirm('Hapus permanen? Aksi ini tidak dapat dibatalkan!')) return;
+    const confirmed = await confirmAction({
+      title: 'Hapus permanen?',
+      text: 'Aksi ini tidak dapat dibatalkan!',
+      confirmButtonText: 'Hapus Permanen',
+      icon: 'error',
+      danger: true,
+    });
+    if (!confirmed) return;
 
     try {
       await API.delete(`/admin/trash/${item.id}`, { params: { type: item.type } });

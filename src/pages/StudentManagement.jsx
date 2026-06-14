@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import API from '../services/api';
-import { showSuccess, showError, getErrorMessage } from '../services/toastService';
+import { showSuccess, showError, getErrorMessage, confirmAction } from '../services/toastService';
 import DataTable from '../components/admin/DataTable';
 import FilterPanel from '../components/admin/FilterPanel';
 
@@ -46,7 +46,13 @@ function StudentManagement() {
   }, [search, statusFilter, currentPage, refreshKey]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Hapus data siswa ini?')) return;
+    const confirmed = await confirmAction({
+      title: 'Hapus data siswa ini?',
+      text: 'Data yang dihapus dapat dipulihkan melalui menu Trash.',
+      confirmButtonText: 'Hapus',
+      danger: true,
+    });
+    if (!confirmed) return;
 
     try {
       await API.delete(`/admin/siswa/${id}`);
@@ -206,7 +212,6 @@ function StudentForm({ student, onSave, onCancel }) {
       nisn: '',
       nama: '',
       kelas: '',
-      sekolah: '',
       tempat_pkl: '',
     }
   );
@@ -242,13 +247,6 @@ function StudentForm({ student, onSave, onCancel }) {
           placeholder="Kelas"
           value={formData.kelas}
           onChange={(e) => setFormData({ ...formData, kelas: e.target.value })}
-          className="field-input"
-        />
-        <input
-          type="text"
-          placeholder="Sekolah"
-          value={formData.sekolah}
-          onChange={(e) => setFormData({ ...formData, sekolah: e.target.value })}
           className="field-input"
         />
         <input

@@ -11,6 +11,7 @@ import {
   FileText,
   Trash2,
   Settings as SettingsIcon,
+  ShieldCheck,
   X,
 } from 'lucide-react';
 
@@ -41,6 +42,7 @@ const sections = [
     links: [
       { to: '/reports', icon: FileText, label: 'Laporan' },
       { to: '/trash', icon: Trash2, label: 'Trash' },
+      { to: '/admins', icon: ShieldCheck, label: 'Manajemen Admin' },
       { to: '/settings', icon: SettingsIcon, label: 'Pengaturan' },
     ],
   },
