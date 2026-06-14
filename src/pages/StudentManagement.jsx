@@ -258,6 +258,13 @@ function StudentForm({ student, onSave, onCancel }) {
         />
       </div>
 
+      {!student && (
+        <p className="mt-4 text-sm text-muted">
+          Password awal akun siswa akan otomatis diatur sama dengan NISN. Informasikan NISN
+          sebagai username dan password awal kepada siswa agar dapat login.
+        </p>
+      )}
+
       <div className="flex gap-2 mt-4">
         <button type="submit" className="btn-primary">
           Simpan

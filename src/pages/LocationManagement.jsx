@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import API from '../services/api';
 import { showSuccess, showError, getErrorMessage } from '../services/toastService';
@@ -15,9 +15,115 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const DEFAULT_CENTER = [-6.2088, 106.8456]; // Jakarta default
+// SMK Kartanegara Wates
+const DEFAULT_CENTER = [-7.90843451513118, 112.11673878292038];
 const MIN_RADIUS_M = 10;
 const MAX_RADIUS_M = 5000;
+
+// Search box overlay - geocodes via Nominatim (OpenStreetMap) and flies the
+// map to the selected result, also reporting the picked coordinates to the
+// parent so they can be copied into the lat/lon form fields.
+function MapSearchControl({ onSelect }) {
+  const map = useMap();
+  const containerRef = useRef(null);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
+  }, []);
+
+  useEffect(() => {
+    const handle = setTimeout(async () => {
+      if (!query.trim()) {
+        setResults([]);
+        return;
+      }
+
+      try {
+        setSearching(true);
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}`
+        );
+        const data = await res.json();
+        setResults(Array.isArray(data) ? data : []);
+        setOpen(true);
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(handle);
+  }, [query]);
+
+  const handleSelect = (result) => {
+    const lat = parseFloat(result.lat);
+    const lon = parseFloat(result.lon);
+    map.flyTo([lat, lon], 17);
+    setQuery(result.display_name);
+    setResults([]);
+    setOpen(false);
+    onSelect?.(lat, lon, result.display_name);
+  };
+
+  return (
+    <div ref={containerRef} className="leaflet-top leaflet-right" style={{ zIndex: 1000 }}>
+      <div className="leaflet-control m-2 w-72 max-w-[calc(100vw-5rem)]">
+        <div className="relative">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => results.length > 0 && setOpen(true)}
+            placeholder="Cari lokasi di peta..."
+            className="field-input w-full shadow-md"
+          />
+          {searching && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">
+              Mencari...
+            </span>
+          )}
+        </div>
+        {open && results.length > 0 && (
+          <ul className="mt-1 bg-surface border border-border rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
+            {results.map((r) => (
+              <li key={r.place_id}>
+                <button
+                  type="button"
+                  onClick={() => handleSelect(r)}
+                  className="w-full text-left px-3 py-2 text-sm text-ink hover:bg-surface-alt transition-colors"
+                >
+                  {r.display_name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Keeps the map centered on the currently edited location whenever the
+// lat/lon form fields change (e.g. after selecting a siswa or a search result).
+function RecenterMap({ position }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, Math.max(map.getZoom(), 15));
+    }
+  }, [map, position]);
+
+  return null;
+}
 
 function LocationManagement() {
   const [students, setStudents] = useState([]);
@@ -30,6 +136,7 @@ function LocationManagement() {
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [radius, setRadius] = useState('100');
+  const [focusPosition, setFocusPosition] = useState(null);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -61,6 +168,7 @@ function LocationManagement() {
     setLatitude('');
     setLongitude('');
     setRadius('100');
+    setFocusPosition(null);
   };
 
   const handleEdit = (siswa) => {
@@ -69,6 +177,9 @@ function LocationManagement() {
     setLatitude(siswa.lat_pkl != null ? String(siswa.lat_pkl) : '');
     setLongitude(siswa.lon_pkl != null ? String(siswa.lon_pkl) : '');
     setRadius(siswa.radius_km != null ? String(Math.round(siswa.radius_km * 1000)) : '100');
+    if (siswa.lat_pkl != null && siswa.lon_pkl != null) {
+      setFocusPosition([Number(siswa.lat_pkl), Number(siswa.lon_pkl)]);
+    }
   };
 
   const handleSave = async () => {
@@ -115,6 +226,11 @@ function LocationManagement() {
 
   const mapCenter =
     locations.length > 0 ? [locations[0].lat_pkl, locations[0].lon_pkl] : DEFAULT_CENTER;
+
+  const handleSearchSelect = (lat, lon) => {
+    setLatitude(lat.toFixed(6));
+    setLongitude(lon.toFixed(6));
+  };
 
   return (
     <div className="p-4 sm:p-6">
@@ -239,6 +355,8 @@ function LocationManagement() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <MapSearchControl onSelect={handleSearchSelect} />
+            <RecenterMap position={focusPosition} />
             {locations.map((loc) => (
               <Circle
                 key={loc.id}
