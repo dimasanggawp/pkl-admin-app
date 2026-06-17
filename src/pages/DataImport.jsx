@@ -109,7 +109,7 @@ function DataImport() {
       <div className="rounded-2xl border border-accent/20 bg-accent-soft p-4 mb-6">
         <p className="text-ink mb-2">
           Gunakan template Excel berikut agar format kolom sesuai dengan yang diharapkan sistem
-          (NISN, Nama, Email, Kelas, Sekolah, Tempat PKL, dll).
+          (NISN, Nama, Kelas, Tempat PKL, Lat_PKL*, Lon_PKL*). Kolom Lat_PKL dan Lon_PKL bersifat opsional.
         </p>
         <button onClick={downloadTemplate} className="text-accent hover:underline font-bold">
           Download Template
@@ -163,8 +163,9 @@ function DataImport() {
                     <th className="px-3 py-2 text-ink">NISN</th>
                     <th className="px-3 py-2 text-ink">Nama</th>
                     <th className="px-3 py-2 text-ink">Kelas</th>
-                    <th className="px-3 py-2 text-ink">Sekolah</th>
                     <th className="px-3 py-2 text-ink">Tempat PKL</th>
+                    <th className="px-3 py-2 text-ink">Lat PKL</th>
+                    <th className="px-3 py-2 text-ink">Lon PKL</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -173,8 +174,9 @@ function DataImport() {
                       <td className="px-3 py-2 text-ink">{row.nisn}</td>
                       <td className="px-3 py-2 text-ink">{row.nama}</td>
                       <td className="px-3 py-2 text-ink">{row.kelas || '-'}</td>
-                      <td className="px-3 py-2 text-ink">{row.sekolah || '-'}</td>
                       <td className="px-3 py-2 text-ink">{row.tempat_pkl || '-'}</td>
+                      <td className="px-3 py-2 text-ink">{row.lat_pkl ?? '-'}</td>
+                      <td className="px-3 py-2 text-ink">{row.lon_pkl ?? '-'}</td>
                     </tr>
                   ))}
                 </tbody>
