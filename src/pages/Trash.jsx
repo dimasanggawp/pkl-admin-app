@@ -45,6 +45,30 @@ function Trash() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (items.length === 0) {
+      showError('Tidak ada item di trash untuk dihapus');
+      return;
+    }
+    const confirmed = await confirmAction({
+      title: 'Hapus semua permanen?',
+      text: `${items.length} item yang sedang ditampilkan akan dihapus selamanya dan tidak dapat dipulihkan!`,
+      confirmButtonText: 'Hapus Semua',
+      icon: 'error',
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    try {
+      const params = type !== 'all' ? { type } : {};
+      const res = await API.delete('/admin/trash/all', { params });
+      showSuccess(res.data?.message || 'Semua item berhasil dihapus permanen');
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      showError(getErrorMessage(err));
+    }
+  };
+
   const handlePermanentDelete = async (item) => {
     const confirmed = await confirmAction({
       title: 'Hapus permanen?',
@@ -93,7 +117,16 @@ function Trash() {
 
   return (
     <div className="p-4 sm:p-6">
-      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink mb-6">Trash</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">Trash</h1>
+        <button
+          onClick={handleDeleteAll}
+          disabled={loading || items.length === 0}
+          className="px-4 py-2 rounded-xl text-sm font-semibold bg-danger text-white hover:bg-danger/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          🗑 Hapus Semua Permanen {items.length > 0 && `(${items.length})`}
+        </button>
+      </div>
 
       {error && (
         <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-sm text-warning">
