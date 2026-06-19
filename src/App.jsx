@@ -19,6 +19,7 @@ const TeacherPerformance = lazy(() => import('./pages/TeacherPerformance'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Trash = lazy(() => import('./pages/Trash'));
 const Settings = lazy(() => import('./pages/Settings'));
+const TahunAjaranManagement = lazy(() => import('./pages/TahunAjaranManagement'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 
 function PageLoader() {
@@ -176,6 +177,16 @@ function App() {
               <ProtectedRoute role="admin">
                 <Layout>
                   <Trash />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tahun-ajaran"
+            element={
+              <ProtectedRoute role="admin">
+                <Layout>
+                  <TahunAjaranManagement />
                 </Layout>
               </ProtectedRoute>
             }

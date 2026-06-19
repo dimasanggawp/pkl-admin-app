@@ -213,8 +213,37 @@ function StudentForm({ student, onSave, onCancel }) {
       nama: '',
       kelas: '',
       tempat_pkl: '',
+      guru_id: '',
+      tahun_ajaran_id: '',
     }
   );
+  const [guruOptions, setGuruOptions] = useState([]);
+  const [tahunAjaranOptions, setTahunAjaranOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchGuru = async () => {
+      try {
+        const response = await API.get('/admin/guru', { params: { limit: 100 } });
+        const data = response.data?.data || response.data;
+        setGuruOptions(Array.isArray(data) ? data : []);
+      } catch {
+        setGuruOptions([]);
+      }
+    };
+
+    const fetchTahunAjaran = async () => {
+      try {
+        const response = await API.get('/admin/tahun-ajaran');
+        const data = response.data?.data || response.data;
+        setTahunAjaranOptions(Array.isArray(data) ? data : []);
+      } catch {
+        setTahunAjaranOptions([]);
+      }
+    };
+
+    fetchGuru();
+    fetchTahunAjaran();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -256,6 +285,30 @@ function StudentForm({ student, onSave, onCancel }) {
           onChange={(e) => setFormData({ ...formData, tempat_pkl: e.target.value })}
           className="field-input md:col-span-2"
         />
+        <select
+          value={formData.guru_id || ''}
+          onChange={(e) => setFormData({ ...formData, guru_id: e.target.value })}
+          className="field-input md:col-span-2"
+        >
+          <option value="">Guru Pembimbing: Belum ditugaskan</option>
+          {guruOptions.map((guru) => (
+            <option key={guru.id} value={guru.id}>
+              {guru.nama} ({guru.niy})
+            </option>
+          ))}
+        </select>
+        <select
+          value={formData.tahun_ajaran_id || ''}
+          onChange={(e) => setFormData({ ...formData, tahun_ajaran_id: e.target.value })}
+          className="field-input md:col-span-2"
+        >
+          <option value="">Tahun Pelajaran: Belum diatur</option>
+          {tahunAjaranOptions.map((tahun) => (
+            <option key={tahun.id} value={tahun.id}>
+              {tahun.nama} {tahun.is_active ? '(aktif)' : ''}
+            </option>
+          ))}
+        </select>
       </div>
 
       {!student && (

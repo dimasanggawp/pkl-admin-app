@@ -31,6 +31,18 @@ ChartJS.register(
 
 const CHART_FONT = { family: 'Manrope', size: 12 };
 
+function formatActivityTimestamp(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 function useChartColors() {
   const { theme } = useTheme();
   return useMemo(() => {
@@ -229,7 +241,9 @@ function Dashboard() {
             {stats.recentActivities.map((activity, idx) => (
               <div key={idx} className="py-3 first:pt-0 last:pb-0 flex items-start justify-between gap-4">
                 <p className="text-ink">{activity.description}</p>
-                <p className="shrink-0 font-mono text-xs text-muted">{activity.timestamp}</p>
+                <p className="shrink-0 font-mono text-xs text-muted">
+                  {formatActivityTimestamp(activity.timestamp)}
+                </p>
               </div>
             ))}
           </div>

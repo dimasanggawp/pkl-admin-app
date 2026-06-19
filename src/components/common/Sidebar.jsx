@@ -12,6 +12,7 @@ import {
   Trash2,
   Settings as SettingsIcon,
   ShieldCheck,
+  CalendarRange,
   X,
 } from 'lucide-react';
 
@@ -27,6 +28,7 @@ const sections = [
       { to: '/import', icon: FileSpreadsheet, label: 'Import Data' },
       { to: '/guru', icon: GraduationCap, label: 'Data Guru' },
       { to: '/locations', icon: MapPin, label: 'Lokasi PKL' },
+      { to: '/tahun-ajaran', icon: CalendarRange, label: 'Tahun Pelajaran' },
     ],
   },
   {
