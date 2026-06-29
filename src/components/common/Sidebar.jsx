@@ -2,7 +2,6 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
-  FileSpreadsheet,
   GraduationCap,
   MapPin,
   BellRing,
@@ -25,7 +24,6 @@ const sections = [
     label: 'Data Induk',
     links: [
       { to: '/students', icon: Users, label: 'Data Siswa' },
-      { to: '/import', icon: FileSpreadsheet, label: 'Import Data' },
       { to: '/guru', icon: GraduationCap, label: 'Data Guru' },
       { to: '/locations', icon: MapPin, label: 'Lokasi PKL' },
       { to: '/tahun-ajaran', icon: CalendarRange, label: 'Tahun Pelajaran' },

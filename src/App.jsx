@@ -9,7 +9,6 @@ import Login from './pages/Login';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const StudentManagement = lazy(() => import('./pages/StudentManagement'));
-const DataImport = lazy(() => import('./pages/DataImport'));
 const GuruManagement = lazy(() => import('./pages/GuruManagement'));
 const AdminManagement = lazy(() => import('./pages/AdminManagement'));
 const LocationManagement = lazy(() => import('./pages/LocationManagement'));
@@ -87,16 +86,6 @@ function App() {
               <ProtectedRoute role="admin">
                 <Layout>
                   <StudentManagement />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/import"
-            element={
-              <ProtectedRoute role="admin">
-                <Layout>
-                  <DataImport />
                 </Layout>
               </ProtectedRoute>
             }

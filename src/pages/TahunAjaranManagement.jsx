@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { CheckCircle2, Pencil, Trash2 } from 'lucide-react';
 import API from '../services/api';
 import { showSuccess, showError, getErrorMessage, confirmAction } from '../services/toastService';
 import DataTable from '../components/admin/DataTable';
+import Modal from '../components/admin/Modal';
 
 function formatDate(value) {
   if (!value) return '-';
@@ -110,10 +112,15 @@ function TahunAjaranManagement() {
       key: 'actions',
       label: 'Aksi',
       render: (row) => (
-        <div className="space-x-2">
+        <div className="flex items-center gap-3">
           {!row.is_active && (
-            <button onClick={() => handleActivate(row)} className="text-success hover:underline">
-              Aktifkan
+            <button
+              onClick={() => handleActivate(row)}
+              title="Aktifkan"
+              aria-label="Aktifkan"
+              className="text-success hover:text-success/70"
+            >
+              <CheckCircle2 size={18} />
             </button>
           )}
           <button
@@ -121,12 +128,19 @@ function TahunAjaranManagement() {
               setEditingItem(row);
               setShowForm(true);
             }}
-            className="text-accent hover:underline"
+            title="Edit"
+            aria-label="Edit"
+            className="text-accent hover:text-accent/70"
           >
-            Edit
+            <Pencil size={18} />
           </button>
-          <button onClick={() => handleDelete(row)} className="text-danger hover:underline">
-            Hapus
+          <button
+            onClick={() => handleDelete(row)}
+            title="Hapus"
+            aria-label="Hapus"
+            className="text-danger hover:text-danger/70"
+          >
+            <Trash2 size={18} />
           </button>
         </div>
       ),
@@ -157,7 +171,13 @@ function TahunAjaranManagement() {
       )}
 
       {showForm && (
-        <div className="mt-6">
+        <Modal
+          title={editingItem ? 'Edit Tahun Pelajaran' : 'Tambah Tahun Pelajaran'}
+          onClose={() => {
+            setShowForm(false);
+            setEditingItem(null);
+          }}
+        >
           <TahunAjaranForm
             item={editingItem}
             onSave={handleSave}
@@ -166,7 +186,7 @@ function TahunAjaranManagement() {
               setEditingItem(null);
             }}
           />
-        </div>
+        </Modal>
       )}
 
       <div className="mt-6">
@@ -201,20 +221,19 @@ function TahunAjaranForm({ item, onSave, onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="panel p-4 sm:p-6">
-      <h3 className="text-xl font-bold text-ink mb-4">
-        {item ? 'Edit' : 'Tambah'} Tahun Pelajaran
-      </h3>
-
+    <form onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input
-          type="text"
-          placeholder="Tahun Pelajaran (contoh: 2025/2026)"
-          value={formData.nama}
-          onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-          className="field-input md:col-span-2"
-          required
-        />
+        <div className="md:col-span-2">
+          <label className="field-label">Tahun Pelajaran</label>
+          <input
+            type="text"
+            placeholder="Contoh: 2025/2026"
+            value={formData.nama}
+            onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+            className="field-input"
+            required
+          />
+        </div>
         <div>
           <label className="field-label">Tanggal Mulai PKL</label>
           <input
