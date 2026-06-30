@@ -239,20 +239,74 @@ function StudentManagement() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                currentPage === page ? 'bg-accent text-white' : 'bg-surface-alt text-ink hover:bg-border'
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       )}
+    </div>
+  );
+}
+
+function Pagination({ currentPage, totalPages, onPageChange }) {
+  // Build the page window: [1] [...] [cur-delta .. cur+delta] [...] [last]
+  // delta=2 on md+, delta=1 on sm (controlled via two separate renders)
+  function getPages(delta) {
+    const pages = [];
+    const left = Math.max(2, currentPage - delta);
+    const right = Math.min(totalPages - 1, currentPage + delta);
+
+    pages.push(1);
+    if (left > 2) pages.push('...');
+    for (let p = left; p <= right; p++) pages.push(p);
+    if (right < totalPages - 1) pages.push('...');
+    if (totalPages > 1) pages.push(totalPages);
+    return pages;
+  }
+
+  const btnBase =
+    'h-9 min-w-[2.25rem] px-2 flex items-center justify-center rounded-lg text-sm font-medium transition-colors select-none';
+  const btnPage = `${btnBase} bg-surface-alt text-ink hover:bg-border`;
+  const btnActive = `${btnBase} bg-accent text-white pointer-events-none`;
+  const btnEllipsis = `${btnBase} text-muted pointer-events-none`;
+  const btnNav = `${btnBase} bg-surface border border-border text-ink hover:bg-surface-alt disabled:opacity-40 disabled:cursor-not-allowed`;
+
+  const renderPages = (pages) =>
+    pages.map((p, i) => {
+      if (p === '...') return <span key={`ellipsis-${i}`} className={btnEllipsis}>…</span>;
+      return (
+        <button key={p} onClick={() => onPageChange(p)} className={p === currentPage ? btnActive : btnPage}>
+          {p}
+        </button>
+      );
+    });
+
+  return (
+    <div className="mt-6 flex flex-col items-center gap-2">
+      {/* Mobile: delta=1 */}
+      <div className="flex items-center gap-1 sm:hidden">
+        <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className={btnNav}>
+          ‹ Prev
+        </button>
+        {renderPages(getPages(1))}
+        <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className={btnNav}>
+          Next ›
+        </button>
+      </div>
+      {/* Desktop: delta=2 */}
+      <div className="hidden sm:flex items-center gap-1">
+        <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className={btnNav}>
+          ‹ Prev
+        </button>
+        {renderPages(getPages(2))}
+        <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className={btnNav}>
+          Next ›
+        </button>
+      </div>
+      <p className="text-xs text-muted">
+        Halaman {currentPage} dari {totalPages}
+      </p>
     </div>
   );
 }
