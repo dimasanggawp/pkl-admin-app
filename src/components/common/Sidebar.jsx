@@ -4,6 +4,7 @@ import {
   Users,
   GraduationCap,
   MapPin,
+  Link2,
   BellRing,
   ClipboardCheck,
   TrendingUp,
@@ -25,7 +26,8 @@ const sections = [
     links: [
       { to: '/students', icon: Users, label: 'Data Siswa' },
       { to: '/guru', icon: GraduationCap, label: 'Data Guru' },
-      { to: '/locations', icon: MapPin, label: 'Lokasi PKL' },
+      { to: '/tempat-pkl', icon: MapPin, label: 'Tempat PKL' },
+      { to: '/mapping-tempat-pkl', icon: Link2, label: 'Mapping Siswa' },
       { to: '/tahun-ajaran', icon: CalendarRange, label: 'Tahun Pelajaran' },
     ],
   },

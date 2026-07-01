@@ -90,7 +90,7 @@ function StudentManagement() {
     { key: 'nisn', label: 'NISN' },
     { key: 'nama', label: 'Nama' },
     { key: 'kelas', label: 'Kelas' },
-    { key: 'tempat_pkl', label: 'Tempat PKL', render: (row) => row.tempat_pkl || '-' },
+    { key: 'tempat_pkl', label: 'Tempat PKL', render: (row) => row.tempatPkl?.nama || '-' },
     {
       key: 'guru_pembimbing',
       label: 'Guru Pembimbing',
@@ -313,17 +313,13 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 
 function StudentForm({ student, onSave, onCancel }) {
   const [formData, setFormData] = useState(
-    student || {
-      nisn: '',
-      nama: '',
-      kelas: '',
-      tempat_pkl: '',
-      guru_id: '',
-      tahun_ajaran_id: '',
-    }
+    student
+      ? { nisn: student.nisn || '', nama: student.nama || '', kelas: student.kelas || '', guru_id: student.guru_id || student.guruPembimbing?.id || '', tahun_ajaran_id: student.tahun_ajaran_id || student.tahunAjaran?.id || '', tempat_pkl_id: student.tempat_pkl_id || student.tempatPkl?.id || '' }
+      : { nisn: '', nama: '', kelas: '', guru_id: '', tahun_ajaran_id: '', tempat_pkl_id: '' }
   );
   const [guruOptions, setGuruOptions] = useState([]);
   const [tahunAjaranOptions, setTahunAjaranOptions] = useState([]);
+  const [tempatOptions, setTempatOptions] = useState([]);
 
   useEffect(() => {
     const fetchGuru = async () => {
@@ -331,23 +327,25 @@ function StudentForm({ student, onSave, onCancel }) {
         const response = await API.get('/admin/guru', { params: { limit: 100 } });
         const data = response.data?.data || response.data;
         setGuruOptions(Array.isArray(data) ? data : []);
-      } catch {
-        setGuruOptions([]);
-      }
+      } catch { setGuruOptions([]); }
     };
-
     const fetchTahunAjaran = async () => {
       try {
         const response = await API.get('/admin/tahun-ajaran');
         const data = response.data?.data || response.data;
         setTahunAjaranOptions(Array.isArray(data) ? data : []);
-      } catch {
-        setTahunAjaranOptions([]);
-      }
+      } catch { setTahunAjaranOptions([]); }
     };
-
+    const fetchTempat = async () => {
+      try {
+        const response = await API.get('/tempat-pkl');
+        const data = response.data?.data || response.data;
+        setTempatOptions(Array.isArray(data) ? data : []);
+      } catch { setTempatOptions([]); }
+    };
     fetchGuru();
     fetchTahunAjaran();
+    fetchTempat();
   }, []);
 
   const handleSubmit = (e) => {
@@ -392,13 +390,16 @@ function StudentForm({ student, onSave, onCancel }) {
         </div>
         <div className="md:col-span-2">
           <label className="field-label">Tempat PKL</label>
-          <input
-            type="text"
-            placeholder="Contoh: PT Maju Bersama"
-            value={formData.tempat_pkl}
-            onChange={(e) => setFormData({ ...formData, tempat_pkl: e.target.value })}
+          <select
+            value={formData.tempat_pkl_id || ''}
+            onChange={(e) => setFormData({ ...formData, tempat_pkl_id: e.target.value })}
             className="field-input"
-          />
+          >
+            <option value="">Belum di-assign</option>
+            {tempatOptions.filter((t) => t.is_active).map((t) => (
+              <option key={t.id} value={t.id}>{t.nama}</option>
+            ))}
+          </select>
         </div>
         <div className="md:col-span-2">
           <label className="field-label">Guru Pembimbing</label>

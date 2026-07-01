@@ -13,9 +13,10 @@ RUN npm config set fetch-retries 5 && \
 COPY . .
 
 ARG VITE_API_URL=http://api.pkl.local/api
+ARG VITE_BASE=/
 ENV VITE_API_URL=$VITE_API_URL
 
-RUN npm run build
+RUN npm run build -- --base=$VITE_BASE
 
 # Stage 2: Production (nginx static serving)
 FROM nginx:1.25-alpine
@@ -24,7 +25,7 @@ LABEL maintainer="PKL Apps Team"
 LABEL component="Frontend Admin"
 
 COPY .docker/admin-app/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html/admin
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     CMD wget -q -O- http://localhost:80/health || exit 1

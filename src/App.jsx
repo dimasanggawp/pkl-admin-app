@@ -11,7 +11,8 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const StudentManagement = lazy(() => import('./pages/StudentManagement'));
 const GuruManagement = lazy(() => import('./pages/GuruManagement'));
 const AdminManagement = lazy(() => import('./pages/AdminManagement'));
-const LocationManagement = lazy(() => import('./pages/LocationManagement'));
+const TempatPklManagement = lazy(() => import('./pages/TempatPklManagement'));
+const MappingSiswa = lazy(() => import('./pages/MappingSiswa'));
 const AlertsMonitoring = lazy(() => import('./pages/AlertsMonitoring'));
 const MonitoringRecords = lazy(() => import('./pages/MonitoringRecords'));
 const TeacherPerformance = lazy(() => import('./pages/TeacherPerformance'));
@@ -112,10 +113,24 @@ function App() {
           />
           <Route
             path="/locations"
+            element={<Navigate to="/tempat-pkl" replace />}
+          />
+          <Route
+            path="/tempat-pkl"
             element={
               <ProtectedRoute role="admin">
                 <Layout>
-                  <LocationManagement />
+                  <TempatPklManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mapping-tempat-pkl"
+            element={
+              <ProtectedRoute role="admin">
+                <Layout>
+                  <MappingSiswa />
                 </Layout>
               </ProtectedRoute>
             }
