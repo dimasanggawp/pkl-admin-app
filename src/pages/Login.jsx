@@ -16,8 +16,8 @@ function Login() {
     setError(null);
     try {
       const response = await API.post('/auth/login', credentials);
-      localStorage.setItem('token', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      localStorage.setItem('admin_token', response.data.data.token);
+      localStorage.setItem('admin_user', JSON.stringify(response.data.data.user));
       showSuccess('Login berhasil!');
       navigate('/');
     } catch (err) {

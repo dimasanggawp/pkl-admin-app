@@ -30,7 +30,7 @@ function PageLoader() {
 }
 
 function LoginRoute() {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('admin_token');
 
   if (token) {
     return <Navigate to="/" replace />;
@@ -59,7 +59,7 @@ function Layout({ children }) {
 function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/login" element={<LoginRoute />} />
           <Route
