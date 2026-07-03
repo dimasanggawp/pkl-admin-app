@@ -112,7 +112,20 @@ function MappingImportModal({ onClose, onImported }) {
 // ── Edit Mapping Modal ───────────────────────────────────────────────────────
 function EditMappingModal({ siswa, tempatList, onClose, onSaved }) {
   const [tempatId, setTempatId] = useState(siswa.tempatPkl?.id ? String(siswa.tempatPkl.id) : '');
+  const [query, setQuery] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const activeTempat = useMemo(() => tempatList.filter((t) => t.is_active), [tempatList]);
+
+  const filteredTempat = useMemo(() => {
+    if (!query.trim()) return activeTempat;
+    const q = query.toLowerCase();
+    return activeTempat.filter(
+      (t) => t.nama?.toLowerCase().includes(q) || t.alamat?.toLowerCase().includes(q)
+    );
+  }, [activeTempat, query]);
+
+  const selected = activeTempat.find((t) => String(t.id) === tempatId);
 
   const handleSave = async () => {
     setSaving(true);
@@ -136,15 +149,65 @@ function EditMappingModal({ siswa, tempatList, onClose, onSaved }) {
       <p className="text-sm text-muted">
         {siswa.nama} <span className="text-xs">({siswa.nisn})</span>
       </p>
+
       <div>
-        <label className="field-label">Tempat PKL</label>
-        <select value={tempatId} onChange={(e) => setTempatId(e.target.value)} className="field-input">
-          <option value="">-- Tidak ada (hapus assignment) --</option>
-          {tempatList.filter((t) => t.is_active).map((t) => (
-            <option key={t.id} value={t.id}>{t.nama}</option>
-          ))}
-        </select>
+        <label className="field-label">Cari Tempat PKL</label>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Cari nama atau alamat tempat PKL..."
+          className="field-input"
+        />
       </div>
+
+      <div className="border border-border rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setTempatId('')}
+          className={`w-full text-left px-3 py-2.5 text-sm border-b border-border transition-colors ${
+            tempatId === '' ? 'bg-accent-soft text-accent font-semibold' : 'text-muted hover:bg-surface-alt'
+          }`}
+        >
+          — Tidak ada (hapus assignment) —
+        </button>
+
+        <div className="max-h-56 overflow-y-auto">
+          {filteredTempat.length === 0 ? (
+            <p className="px-3 py-4 text-sm text-muted text-center">Tidak ada tempat PKL ditemukan</p>
+          ) : (
+            <table className="min-w-full text-sm text-left">
+              <tbody>
+                {filteredTempat.map((t) => {
+                  const isSelected = String(t.id) === tempatId;
+                  return (
+                    <tr
+                      key={t.id}
+                      onClick={() => setTempatId(String(t.id))}
+                      className={`cursor-pointer border-b border-border last:border-b-0 transition-colors ${
+                        isSelected ? 'bg-accent-soft' : 'hover:bg-surface-alt'
+                      }`}
+                    >
+                      <td className="px-3 py-2">
+                        <p className={`font-medium ${isSelected ? 'text-accent' : 'text-ink'}`}>{t.nama}</p>
+                        {t.alamat && <p className="text-xs text-muted truncate max-w-xs">{t.alamat}</p>}
+                      </td>
+                      <td className="px-3 py-2 text-xs text-muted whitespace-nowrap text-right">
+                        {t.radius}m
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      <p className="text-xs text-muted">
+        Terpilih: <span className="text-ink font-medium">{selected?.nama || 'Tidak ada'}</span>
+      </p>
+
       <div className="flex gap-3 pt-2">
         <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">
           {saving ? 'Menyimpan...' : 'Simpan'}
