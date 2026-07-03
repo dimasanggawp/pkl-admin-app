@@ -43,6 +43,11 @@ function formatActivityTimestamp(value) {
   });
 }
 
+// Chart-only palette: light steps reuse the app's badge colors (already
+// validated), dark steps are separately tuned (not the badge tokens) so every
+// slot lands in the OKLCH L 0.48-0.67 band needed for a dark chart surface -
+// validated via dataviz skill's validate_palette.js (categorical, 4 slots,
+// worst adjacent CVD ΔE > 20 in both modes).
 function useChartColors() {
   const { theme } = useTheme();
   return useMemo(() => {
@@ -50,12 +55,13 @@ function useChartColors() {
       return {
         text: '#E8EAEF',
         muted: '#8E96A5',
-        grid: '#292F3C',
+        grid: '#242938',
         surface: '#151922',
         accent: '#6390FF',
-        success: '#34C799',
-        warning: '#FBBF24',
-        danger: '#F87171',
+        success: '#17916A',
+        info: '#7160D9',
+        warning: '#B87D1B',
+        danger: '#DD5250',
       };
     }
     return {
@@ -65,10 +71,19 @@ function useChartColors() {
       surface: '#FFFFFF',
       accent: '#2554FF',
       success: '#10A37F',
+      info: '#6D5DD3',
       warning: '#D97706',
       danger: '#E03C3C',
     };
   }, [theme]);
+}
+
+function makeVerticalGradient(ctx, chartArea, colorTop, colorBottom) {
+  if (!chartArea) return colorTop;
+  const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  gradient.addColorStop(0, colorTop);
+  gradient.addColorStop(1, colorBottom);
+  return gradient;
 }
 
 function Dashboard() {
@@ -100,12 +115,30 @@ function Dashboard() {
     () => ({
       responsive: true,
       maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'bottom', labels: { font: CHART_FONT, color: colors.text, usePointStyle: true } },
+        legend: { position: 'bottom', labels: { font: CHART_FONT, color: colors.text, usePointStyle: true, boxHeight: 8 } },
+        tooltip: {
+          backgroundColor: colors.surface,
+          titleColor: colors.text,
+          bodyColor: colors.muted,
+          borderColor: colors.grid,
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          titleFont: CHART_FONT,
+          bodyFont: CHART_FONT,
+          boxPadding: 4,
+        },
       },
       scales: {
-        x: { ticks: { font: CHART_FONT, color: colors.muted }, grid: { color: colors.grid } },
-        y: { ticks: { font: CHART_FONT, color: colors.muted }, grid: { color: colors.grid } },
+        x: { ticks: { font: CHART_FONT, color: colors.muted }, grid: { display: false }, border: { color: colors.grid } },
+        y: {
+          beginAtZero: true,
+          ticks: { font: CHART_FONT, color: colors.muted, precision: 0 },
+          grid: { color: colors.grid },
+          border: { display: false },
+        },
       },
     }),
     [colors]
@@ -119,7 +152,16 @@ function Dashboard() {
           label: 'Presensi',
           data: [],
           borderColor: colors.accent,
-          backgroundColor: `${colors.accent}1F`,
+          backgroundColor: (context) => {
+            const { chart } = context;
+            return makeVerticalGradient(chart.ctx, chart.chartArea, `${colors.accent}3D`, `${colors.accent}00`);
+          },
+          pointBackgroundColor: colors.accent,
+          pointBorderColor: colors.surface,
+          pointBorderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          borderWidth: 2,
           tension: 0.35,
           fill: true,
         },
@@ -135,8 +177,13 @@ function Dashboard() {
         {
           label: 'Jumlah Siswa',
           data: [],
-          backgroundColor: colors.success,
-          borderRadius: 4,
+          backgroundColor: (context) => {
+            const { chart } = context;
+            return makeVerticalGradient(chart.ctx, chart.chartArea, colors.accent, `${colors.accent}A8`);
+          },
+          borderRadius: 6,
+          borderSkipped: false,
+          maxBarThickness: 40,
         },
       ],
     }),
@@ -149,9 +196,11 @@ function Dashboard() {
       datasets: stats?.statusChart?.datasets || [
         {
           data: [0, 0, 0, 0],
-          backgroundColor: [colors.success, colors.accent, colors.warning, colors.danger],
+          backgroundColor: [colors.success, colors.info, colors.warning, colors.danger],
           borderColor: colors.surface,
-          borderWidth: 2,
+          borderWidth: 3,
+          hoverOffset: 6,
+          spacing: 2,
         },
       ],
     }),
@@ -214,8 +263,21 @@ function Dashboard() {
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '68%',
                 plugins: {
-                  legend: { position: 'bottom', labels: { font: CHART_FONT, color: colors.text, usePointStyle: true } },
+                  legend: { position: 'bottom', labels: { font: CHART_FONT, color: colors.text, usePointStyle: true, boxHeight: 8 } },
+                  tooltip: {
+                    backgroundColor: colors.surface,
+                    titleColor: colors.text,
+                    bodyColor: colors.muted,
+                    borderColor: colors.grid,
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 8,
+                    titleFont: CHART_FONT,
+                    bodyFont: CHART_FONT,
+                    boxPadding: 4,
+                  },
                 },
               }}
             />
