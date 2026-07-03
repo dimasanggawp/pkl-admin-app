@@ -13,6 +13,7 @@ import {
   Settings as SettingsIcon,
   ShieldCheck,
   CalendarRange,
+  CalendarCheck,
   X,
 } from 'lucide-react';
 
@@ -34,6 +35,7 @@ const sections = [
   {
     label: 'Pengawasan',
     links: [
+      { to: '/presensi-harian', icon: CalendarCheck, label: 'Presensi Harian' },
       { to: '/alerts', icon: BellRing, label: 'Alert Monitoring' },
       { to: '/monitoring', icon: ClipboardCheck, label: 'Monitoring Records' },
       { to: '/teacher-performance', icon: TrendingUp, label: 'Performa Guru' },

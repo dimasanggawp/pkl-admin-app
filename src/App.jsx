@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const PresensiHarian = lazy(() => import('./pages/PresensiHarian'));
 const StudentManagement = lazy(() => import('./pages/StudentManagement'));
 const GuruManagement = lazy(() => import('./pages/GuruManagement'));
 const AdminManagement = lazy(() => import('./pages/AdminManagement'));
@@ -131,6 +132,16 @@ function App() {
               <ProtectedRoute role="admin">
                 <Layout>
                   <MappingSiswa />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/presensi-harian"
+            element={
+              <ProtectedRoute role="admin">
+                <Layout>
+                  <PresensiHarian />
                 </Layout>
               </ProtectedRoute>
             }
