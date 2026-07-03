@@ -225,8 +225,6 @@ function MappingSiswa() {
   const [tahunAjaranList, setTahunAjaranList] = useState([]);
   const [search, setSearch] = useState('');
   const [tahunAjaranFilter, setTahunAjaranFilter] = useState('all');
-  const [selectedSiswaId, setSelectedSiswaId] = useState('');
-  const [selectedTempatId, setSelectedTempatId] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [editingSiswa, setEditingSiswa] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -292,20 +290,6 @@ function MappingSiswa() {
     }
     return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
   }, [students]);
-
-  const handleAssign = async () => {
-    if (!selectedSiswaId) { showError('Pilih siswa terlebih dahulu'); return; }
-    try {
-      await API.post('/admin/tempat-pkl/assign', {
-        siswa_id: Number(selectedSiswaId),
-        tempat_pkl_id: selectedTempatId ? Number(selectedTempatId) : null,
-      });
-      showSuccess('Assignment berhasil diperbarui');
-      setSelectedSiswaId('');
-      setSelectedTempatId('');
-      setRefreshKey((k) => k + 1);
-    } catch (err) { showError(getErrorMessage(err)); }
-  };
 
   const handleUnassign = async (siswa) => {
     const confirmed = await confirmAction({
@@ -392,39 +376,6 @@ function MappingSiswa() {
           </div>
         </div>
       )}
-
-      {/* Manual assign panel */}
-      <div className="panel p-4 sm:p-6 mb-6">
-        <h2 className="text-lg font-bold text-ink mb-4">Assign Manual</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-          <div>
-            <label className="field-label">Pilih Siswa</label>
-            <select value={selectedSiswaId} onChange={(e) => setSelectedSiswaId(e.target.value)} className="field-input">
-              <option value="">-- Pilih Siswa --</option>
-              {students.filter((s) => !s.tempatPkl).map((s) => (
-                <option key={s.id} value={s.id}>{s.nama} ({s.nisn})</option>
-              ))}
-              {students.filter((s) => s.tempatPkl).length > 0 && (
-                <optgroup label="Sudah ter-assign">
-                  {students.filter((s) => s.tempatPkl).map((s) => (
-                    <option key={s.id} value={s.id}>{s.nama} ({s.nisn}) — {s.tempatPkl.nama}</option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-          </div>
-          <div>
-            <label className="field-label">Pilih Tempat PKL</label>
-            <select value={selectedTempatId} onChange={(e) => setSelectedTempatId(e.target.value)} className="field-input">
-              <option value="">-- Hapus Assignment --</option>
-              {tempatList.filter((t) => t.is_active).map((t) => (
-                <option key={t.id} value={t.id}>{t.nama}</option>
-              ))}
-            </select>
-          </div>
-          <button onClick={handleAssign} className="btn-primary h-10">Assign</button>
-        </div>
-      </div>
 
       {showImport && (
         <Modal title="Import Mapping dari Excel" onClose={() => setShowImport(false)}>
