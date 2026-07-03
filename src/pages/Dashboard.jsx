@@ -144,13 +144,13 @@ function Dashboard() {
     [colors]
   );
 
-  const dailyTrendData = useMemo(
-    () => ({
+  const dailyTrendData = useMemo(() => {
+    const source = stats?.dailyTrendChart?.datasets?.[0] || { label: 'Presensi', data: [] };
+    return {
       labels: stats?.dailyTrendChart?.labels || [],
-      datasets: stats?.dailyTrendChart?.datasets || [
+      datasets: [
         {
-          label: 'Presensi',
-          data: [],
+          ...source,
           borderColor: colors.accent,
           backgroundColor: (context) => {
             const { chart } = context;
@@ -166,17 +166,16 @@ function Dashboard() {
           fill: true,
         },
       ],
-    }),
-    [stats, colors]
-  );
+    };
+  }, [stats, colors]);
 
-  const distributionData = useMemo(
-    () => ({
+  const distributionData = useMemo(() => {
+    const source = stats?.distributionChart?.datasets?.[0] || { label: 'Jumlah Siswa', data: [] };
+    return {
       labels: stats?.distributionChart?.labels || [],
-      datasets: stats?.distributionChart?.datasets || [
+      datasets: [
         {
-          label: 'Jumlah Siswa',
-          data: [],
+          ...source,
           backgroundColor: (context) => {
             const { chart } = context;
             return makeVerticalGradient(chart.ctx, chart.chartArea, colors.accent, `${colors.accent}A8`);
@@ -186,16 +185,16 @@ function Dashboard() {
           maxBarThickness: 40,
         },
       ],
-    }),
-    [stats, colors]
-  );
+    };
+  }, [stats, colors]);
 
-  const statusData = useMemo(
-    () => ({
+  const statusData = useMemo(() => {
+    const source = stats?.statusChart?.datasets?.[0] || { data: [0, 0, 0, 0] };
+    return {
       labels: stats?.statusChart?.labels || ['Hadir', 'Izin', 'Sakit', 'Alpha'],
-      datasets: stats?.statusChart?.datasets || [
+      datasets: [
         {
-          data: [0, 0, 0, 0],
+          ...source,
           backgroundColor: [colors.success, colors.info, colors.warning, colors.danger],
           borderColor: colors.surface,
           borderWidth: 3,
@@ -203,9 +202,8 @@ function Dashboard() {
           spacing: 2,
         },
       ],
-    }),
-    [stats, colors]
-  );
+    };
+  }, [stats, colors]);
 
   if (loading) {
     return (
