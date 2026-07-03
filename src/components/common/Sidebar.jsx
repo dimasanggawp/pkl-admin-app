@@ -15,6 +15,7 @@ import {
   CalendarRange,
   CalendarCheck,
   BookMarked,
+  BookOpenText,
   X,
 } from 'lucide-react';
 
@@ -38,6 +39,7 @@ const sections = [
     label: 'Pengawasan',
     links: [
       { to: '/presensi-harian', icon: CalendarCheck, label: 'Presensi Harian' },
+      { to: '/jurnal-harian', icon: BookOpenText, label: 'Jurnal Harian' },
       { to: '/alerts', icon: BellRing, label: 'Alert Monitoring' },
       { to: '/monitoring', icon: ClipboardCheck, label: 'Monitoring Records' },
       { to: '/teacher-performance', icon: TrendingUp, label: 'Performa Guru' },

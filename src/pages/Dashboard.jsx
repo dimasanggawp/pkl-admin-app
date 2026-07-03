@@ -169,6 +169,25 @@ function Dashboard() {
     };
   }, [stats, colors]);
 
+  const jurnalUploadData = useMemo(() => {
+    const source = stats?.jurnalUploadChart?.datasets?.[0] || { label: 'Jurnal Diupload', data: [] };
+    return {
+      labels: stats?.jurnalUploadChart?.labels || [],
+      datasets: [
+        {
+          ...source,
+          backgroundColor: (context) => {
+            const { chart } = context;
+            return makeVerticalGradient(chart.ctx, chart.chartArea, colors.info, `${colors.info}A8`);
+          },
+          borderRadius: 6,
+          borderSkipped: false,
+          maxBarThickness: 40,
+        },
+      ],
+    };
+  }, [stats, colors]);
+
   const distributionData = useMemo(() => {
     const source = stats?.distributionChart?.datasets?.[0] || { label: 'Jumlah Siswa', data: [] };
     return {
@@ -245,14 +264,21 @@ function Dashboard() {
         </div>
 
         <div className="panel p-5 sm:p-6">
-          <h2 className="text-lg font-bold text-ink mb-4">Distribusi Siswa per Zona</h2>
+          <h2 className="text-lg font-bold text-ink mb-4">Upload Jurnal per Hari</h2>
           <div className="h-64">
-            <Bar data={distributionData} options={chartOptionsBase} />
+            <Bar data={jurnalUploadData} options={chartOptionsBase} />
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="panel p-5 sm:p-6">
+          <h2 className="text-lg font-bold text-ink mb-4">Distribusi Siswa per Zona</h2>
+          <div className="h-64">
+            <Bar data={distributionData} options={chartOptionsBase} />
+          </div>
+        </div>
+
         <div className="panel p-5 sm:p-6">
           <h2 className="text-lg font-bold text-ink mb-4">Status Presensi</h2>
           <div className="h-64">
@@ -282,14 +308,15 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Key Metrics */}
-        <div className="panel p-5 sm:p-6">
-          <h2 className="text-lg font-bold text-ink mb-5">Metrik Utama</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <MetricItem label="Journal Approval Rate" value={`${stats?.approvalRate || 0}%`} className="text-success" />
-            <MetricItem label="Avg Review Time" value={`${stats?.avgReviewTime || 0}h`} className="text-accent" />
-            <MetricItem label="System Uptime" value={`${stats?.systemUptime || 0}%`} className="text-warning" />
-          </div>
+      </div>
+
+      {/* Key Metrics */}
+      <div className="panel p-5 sm:p-6">
+        <h2 className="text-lg font-bold text-ink mb-5">Metrik Utama</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <MetricItem label="Journal Approval Rate" value={`${stats?.approvalRate || 0}%`} className="text-success" />
+          <MetricItem label="Avg Review Time" value={`${stats?.avgReviewTime || 0}h`} className="text-accent" />
+          <MetricItem label="System Uptime" value={`${stats?.systemUptime || 0}%`} className="text-warning" />
         </div>
       </div>
 
