@@ -19,6 +19,8 @@ const STATUS_BADGE = {
 function PresensiHarian() {
   const [tanggal, setTanggal] = useState(todayISODate());
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [kelasFilter, setKelasFilter] = useState('all');
   const [siswa, setSiswa] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,14 +43,25 @@ function PresensiHarian() {
     fetchPresensi();
   }, [tanggal]);
 
+  const kelasOptions = useMemo(
+    () => Array.from(new Set(siswa.map((s) => s.kelas).filter(Boolean))).sort(),
+    [siswa]
+  );
+
   const filteredSiswa = useMemo(
     () =>
-      siswa.filter(
-        (s) =>
+      siswa.filter((s) => {
+        const matchSearch =
           (s.nama || '').toLowerCase().includes(search.toLowerCase()) ||
-          (s.nisn || '').includes(search)
-      ),
-    [siswa, search]
+          (s.nisn || '').includes(search);
+        const matchStatus =
+          statusFilter === 'all' ||
+          (statusFilter === 'sudah' && !!s.status) ||
+          (statusFilter === 'belum' && !s.status);
+        const matchKelas = kelasFilter === 'all' || s.kelas === kelasFilter;
+        return matchSearch && matchStatus && matchKelas;
+      }),
+    [siswa, search, statusFilter, kelasFilter]
   );
 
   const hadirCount = siswa.filter((s) => s.status === 'hadir').length;
@@ -104,6 +117,39 @@ function PresensiHarian() {
             onChange={(e) => setTanggal(e.target.value)}
             className="field-input"
           />
+        </div>
+        <div>
+          <label className="field-label" htmlFor="statusFilter">
+            Status Presensi
+          </label>
+          <select
+            id="statusFilter"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="field-input"
+          >
+            <option value="all">Semua</option>
+            <option value="sudah">Sudah Presensi</option>
+            <option value="belum">Belum Presensi</option>
+          </select>
+        </div>
+        <div>
+          <label className="field-label" htmlFor="kelasFilter">
+            Kelas
+          </label>
+          <select
+            id="kelasFilter"
+            value={kelasFilter}
+            onChange={(e) => setKelasFilter(e.target.value)}
+            className="field-input"
+          >
+            <option value="all">Semua Kelas</option>
+            {kelasOptions.map((kelas) => (
+              <option key={kelas} value={kelas}>
+                {kelas}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex-1 min-w-[200px]">
           <label className="field-label" htmlFor="search">

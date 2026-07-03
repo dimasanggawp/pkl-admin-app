@@ -21,6 +21,7 @@ const Reports = lazy(() => import('./pages/Reports'));
 const Trash = lazy(() => import('./pages/Trash'));
 const Settings = lazy(() => import('./pages/Settings'));
 const TahunAjaranManagement = lazy(() => import('./pages/TahunAjaranManagement'));
+const JurusanManagement = lazy(() => import('./pages/JurusanManagement'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 
 function PageLoader() {
@@ -202,6 +203,16 @@ function App() {
               <ProtectedRoute role="admin">
                 <Layout>
                   <TahunAjaranManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jurusan"
+            element={
+              <ProtectedRoute role="admin">
+                <Layout>
+                  <JurusanManagement />
                 </Layout>
               </ProtectedRoute>
             }

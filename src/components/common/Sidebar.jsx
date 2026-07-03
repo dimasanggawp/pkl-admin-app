@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   CalendarRange,
   CalendarCheck,
+  BookMarked,
   X,
 } from 'lucide-react';
 
@@ -27,6 +28,7 @@ const sections = [
     links: [
       { to: '/students', icon: Users, label: 'Data Siswa' },
       { to: '/guru', icon: GraduationCap, label: 'Data Guru' },
+      { to: '/jurusan', icon: BookMarked, label: 'Jurusan' },
       { to: '/tempat-pkl', icon: MapPin, label: 'Tempat PKL' },
       { to: '/mapping-tempat-pkl', icon: Link2, label: 'Mapping Siswa' },
       { to: '/tahun-ajaran', icon: CalendarRange, label: 'Tahun Pelajaran' },

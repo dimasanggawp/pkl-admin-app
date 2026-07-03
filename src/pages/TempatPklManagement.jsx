@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Pencil, Trash2, Power, PowerOff, MapPin } from 'lucide-react';
+import { Pencil, Trash2, Power, PowerOff, MapPin, Upload } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Circle, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import API from '../services/api';
@@ -16,6 +16,8 @@ delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow });
 
 const DEFAULT_CENTER = [-7.90843451513118, 112.11673878292038];
+const IMPORT_MAX_SIZE = 5 * 1024 * 1024;
+const IMPORT_VALID_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
 
 function MapClickHandler({ onMapClick }) {
   useMapEvents({ click: (e) => onMapClick(e.latlng.lat, e.latlng.lng) });
@@ -66,7 +68,7 @@ function MapSearchControl({ onSelect }) {
     setQuery(r.display_name);
     setResults([]);
     setOpen(false);
-    onSelect?.(lat, lon);
+    onSelect?.(lat, lon, r.display_name);
   };
 
   return (
@@ -104,6 +106,8 @@ function TempatPklForm({ tempatPkl, onSave, onCancel }) {
   const [focusPosition, setFocusPosition] = useState(
     tempatPkl?.lat != null ? [Number(tempatPkl.lat), Number(tempatPkl.lon)] : null
   );
+  const [geocoding, setGeocoding] = useState(false);
+  const skipNextReverseRef = useRef(false);
 
   const mapCenter = focusPosition || DEFAULT_CENTER;
   const markerPos = lat && lon && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lon))
@@ -115,11 +119,45 @@ function TempatPklForm({ tempatPkl, onSave, onCancel }) {
     setFocusPosition([newLat, newLon]);
   };
 
-  const handleSearchSelect = (newLat, newLon) => {
+  const handleSearchSelect = (newLat, newLon, displayName) => {
+    skipNextReverseRef.current = true;
     setLat(newLat.toFixed(6));
     setLon(newLon.toFixed(6));
     setFocusPosition([newLat, newLon]);
+    if (displayName) {
+      setNama(displayName.split(',')[0].trim());
+      setAlamat(displayName);
+    }
   };
+
+  useEffect(() => {
+    if (skipNextReverseRef.current) {
+      skipNextReverseRef.current = false;
+      return undefined;
+    }
+    const latNum = Number(lat);
+    const lonNum = Number(lon);
+    if (!lat || !lon || Number.isNaN(latNum) || Number.isNaN(lonNum)) return undefined;
+
+    const handle = setTimeout(async () => {
+      try {
+        setGeocoding(true);
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latNum}&lon=${lonNum}`
+        );
+        const data = await res.json();
+        if (data?.display_name) {
+          setAlamat(data.display_name);
+        }
+      } catch {
+        // ignore reverse-geocode failures — user can still fill Alamat manually
+      } finally {
+        setGeocoding(false);
+      }
+    }, 800);
+
+    return () => clearTimeout(handle);
+  }, [lat, lon]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -134,9 +172,11 @@ function TempatPklForm({ tempatPkl, onSave, onCancel }) {
           placeholder="Contoh: PT Maju Bersama" className="field-input" required />
       </div>
       <div>
-        <label className="field-label">Alamat</label>
+        <label className="field-label">
+          Alamat{geocoding && <span className="ml-2 text-xs font-normal text-muted">Mencari alamat...</span>}
+        </label>
         <textarea value={alamat} onChange={(e) => setAlamat(e.target.value)}
-          placeholder="Alamat lengkap tempat PKL" className="field-input" rows={2} />
+          placeholder="Alamat lengkap tempat PKL (otomatis terisi dari koordinat)" className="field-input" rows={2} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -184,6 +224,7 @@ function TempatPklManagement() {
   const [tempatList, setTempatList] = useState([]);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -287,9 +328,15 @@ function TempatPklManagement() {
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
           <MapPin size={28} className="text-accent" /> Tempat PKL
         </h1>
-        <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary">
-          Tambah Tempat PKL
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowImport(true)} className="btn-secondary flex items-center gap-2">
+            <Upload size={16} />
+            Import Excel
+          </button>
+          <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary">
+            Tambah Tempat PKL
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -309,6 +356,15 @@ function TempatPklManagement() {
         </Modal>
       )}
 
+      {showImport && (
+        <Modal title="Import Tempat PKL dari Excel" onClose={() => setShowImport(false)}>
+          <TempatPklImportModal
+            onClose={() => setShowImport(false)}
+            onImported={() => setRefreshKey((k) => k + 1)}
+          />
+        </Modal>
+      )}
+
       <div className="mt-6">
         {loading ? (
           <div className="p-6 text-center text-muted">Memuat data...</div>
@@ -316,6 +372,193 @@ function TempatPklManagement() {
           <DataTable columns={columns} data={tempatList} emptyMessage="Belum ada tempat PKL terdaftar" />
         )}
       </div>
+    </div>
+  );
+}
+
+function TempatPklImportModal({ onClose, onImported }) {
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const validateFile = (selectedFile) => {
+    if (selectedFile.size > IMPORT_MAX_SIZE) {
+      showError('File terlalu besar (maksimal 5MB)');
+      return false;
+    }
+    const hasValidExtension = IMPORT_VALID_EXTENSIONS.some((ext) =>
+      selectedFile.name.toLowerCase().endsWith(ext)
+    );
+    if (!hasValidExtension) {
+      showError('Format file tidak valid. Gunakan Excel (.xlsx, .xls) atau CSV');
+      return false;
+    }
+    return true;
+  };
+
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+    if (!validateFile(selectedFile)) {
+      e.target.value = '';
+      return;
+    }
+    setFile(selectedFile);
+    setPreview(null);
+    setResult(null);
+  };
+
+  const handlePreview = async () => {
+    if (!file) return;
+    setPreviewing(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await API.post('/admin/tempat-pkl/import/preview', formData);
+      setPreview(response.data?.data || response.data);
+      setResult(null);
+    } catch (err) {
+      showError(getErrorMessage(err));
+      setPreview(null);
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!file) return;
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await API.post('/admin/tempat-pkl/import', formData);
+      const data = response.data?.data || response.data;
+      setResult(data);
+      showSuccess(`Berhasil mengimpor ${data.importedCount ?? 0} tempat PKL`);
+      setFile(null);
+      setPreview(null);
+      onImported();
+    } catch (err) {
+      showError(getErrorMessage(err));
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const downloadTemplate = async () => {
+    try {
+      const response = await API.get('/admin/tempat-pkl/import/template', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'template-tempat-pkl.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      showError(getErrorMessage(err));
+    }
+  };
+
+  return (
+    <div>
+      <div className="rounded-xl border border-accent/20 bg-accent-soft p-4 mb-4">
+        <p className="text-sm text-ink mb-2">
+          Gunakan template berikut agar format kolom sesuai (Nama, Alamat, Lat, Lon, Radius*).
+          Kolom Alamat dan Radius bersifat opsional (Radius default 100 meter).
+        </p>
+        <button onClick={downloadTemplate} className="text-accent hover:underline font-bold text-sm">
+          Download Template
+        </button>
+      </div>
+
+      <label className="field-label">Pilih File Excel</label>
+      <input
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        onChange={handleFileSelect}
+        className="w-full mb-4 text-sm text-muted"
+      />
+
+      {file && (
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+          <button onClick={handlePreview} disabled={previewing} className="btn-secondary flex-1">
+            {previewing ? 'Memuat preview...' : 'Preview Data'}
+          </button>
+          <button onClick={handleImport} disabled={importing} className="btn-primary flex-1">
+            {importing ? 'Mengimpor...' : 'Import Data'}
+          </button>
+        </div>
+      )}
+
+      {preview && (
+        <div className="mb-4">
+          <p className="text-sm text-muted mb-2">
+            Total baris: {preview.totalRows} | Valid: {preview.validCount} | Error: {preview.errorCount}
+          </p>
+
+          {preview.valid?.length > 0 && (
+            <div className="overflow-x-auto mb-3">
+              <table className="min-w-full text-sm text-left border border-border rounded-xl">
+                <thead className="bg-surface-alt">
+                  <tr>
+                    <th className="px-3 py-2 text-ink">Nama</th>
+                    <th className="px-3 py-2 text-ink">Alamat</th>
+                    <th className="px-3 py-2 text-ink">Lat</th>
+                    <th className="px-3 py-2 text-ink">Lon</th>
+                    <th className="px-3 py-2 text-ink">Radius</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.valid.slice(0, 5).map((row, idx) => (
+                    <tr key={idx} className="border-t border-border">
+                      <td className="px-3 py-2 text-ink">{row.nama}</td>
+                      <td className="px-3 py-2 text-ink">{row.alamat || '-'}</td>
+                      <td className="px-3 py-2 text-ink">{row.lat}</td>
+                      <td className="px-3 py-2 text-ink">{row.lon}</td>
+                      <td className="px-3 py-2 text-ink">{row.radius}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {preview.valid.length > 5 && (
+                <p className="text-xs text-muted mt-1">
+                  Menampilkan 5 dari {preview.valid.length} baris valid.
+                </p>
+              )}
+            </div>
+          )}
+
+          {preview.errors?.length > 0 && (
+            <div className="rounded-xl border border-danger/25 bg-danger/10 p-3">
+              <h3 className="font-bold text-danger mb-2 text-sm">
+                Error pada {preview.errors.length} baris
+              </h3>
+              <ul className="text-sm text-danger space-y-1 list-disc list-inside">
+                {preview.errors.slice(0, 10).map((err, idx) => (
+                  <li key={idx}>
+                    Baris {err.row} ({err.nama || '-'}): {err.errors?.join(', ')}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {result && (
+        <div className="rounded-xl border border-success/25 bg-success/10 p-3 mb-4">
+          <p className="text-success font-bold text-sm mb-1">Import selesai</p>
+          <p className="text-sm text-success">
+            Total baris: {result.totalRows} | Berhasil diimpor: {result.importedCount} | Dilewati: {result.skippedCount}
+          </p>
+        </div>
+      )}
+
+      <button onClick={onClose} className="btn-secondary w-full">Tutup</button>
     </div>
   );
 }

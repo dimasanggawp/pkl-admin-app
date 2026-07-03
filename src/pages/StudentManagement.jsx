@@ -90,6 +90,7 @@ function StudentManagement() {
     { key: 'nisn', label: 'NISN' },
     { key: 'nama', label: 'Nama' },
     { key: 'kelas', label: 'Kelas' },
+    { key: 'jurusan', label: 'Jurusan', render: (row) => row.jurusan?.kode || row.jurusan?.nama || '-' },
     { key: 'tempat_pkl', label: 'Tempat PKL', render: (row) => row.tempatPkl?.nama || '-' },
     {
       key: 'guru_pembimbing',
@@ -314,12 +315,13 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 function StudentForm({ student, onSave, onCancel }) {
   const [formData, setFormData] = useState(
     student
-      ? { nisn: student.nisn || '', nama: student.nama || '', kelas: student.kelas || '', guru_id: student.guru_id || student.guruPembimbing?.id || '', tahun_ajaran_id: student.tahun_ajaran_id || student.tahunAjaran?.id || '', tempat_pkl_id: student.tempat_pkl_id || student.tempatPkl?.id || '' }
-      : { nisn: '', nama: '', kelas: '', guru_id: '', tahun_ajaran_id: '', tempat_pkl_id: '' }
+      ? { nisn: student.nisn || '', nama: student.nama || '', kelas: student.kelas || '', guru_id: student.guru_id || student.guruPembimbing?.id || '', tahun_ajaran_id: student.tahun_ajaran_id || student.tahunAjaran?.id || '', tempat_pkl_id: student.tempat_pkl_id || student.tempatPkl?.id || '', jurusan_id: student.jurusan_id || student.jurusan?.id || '' }
+      : { nisn: '', nama: '', kelas: '', guru_id: '', tahun_ajaran_id: '', tempat_pkl_id: '', jurusan_id: '' }
   );
   const [guruOptions, setGuruOptions] = useState([]);
   const [tahunAjaranOptions, setTahunAjaranOptions] = useState([]);
   const [tempatOptions, setTempatOptions] = useState([]);
+  const [jurusanOptions, setJurusanOptions] = useState([]);
 
   useEffect(() => {
     const fetchGuru = async () => {
@@ -343,9 +345,17 @@ function StudentForm({ student, onSave, onCancel }) {
         setTempatOptions(Array.isArray(data) ? data : []);
       } catch { setTempatOptions([]); }
     };
+    const fetchJurusan = async () => {
+      try {
+        const response = await API.get('/jurusan');
+        const data = response.data?.data || response.data;
+        setJurusanOptions(Array.isArray(data) ? data : []);
+      } catch { setJurusanOptions([]); }
+    };
     fetchGuru();
     fetchTahunAjaran();
     fetchTempat();
+    fetchJurusan();
   }, []);
 
   const handleSubmit = (e) => {
@@ -387,6 +397,21 @@ function StudentForm({ student, onSave, onCancel }) {
             onChange={(e) => setFormData({ ...formData, kelas: e.target.value })}
             className="field-input"
           />
+        </div>
+        <div>
+          <label className="field-label">Jurusan</label>
+          <select
+            value={formData.jurusan_id || ''}
+            onChange={(e) => setFormData({ ...formData, jurusan_id: e.target.value })}
+            className="field-input"
+          >
+            <option value="">Belum diatur</option>
+            {jurusanOptions.map((jurusan) => (
+              <option key={jurusan.id} value={jurusan.id}>
+                {jurusan.kode} — {jurusan.nama}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="md:col-span-2">
           <label className="field-label">Tempat PKL</label>
