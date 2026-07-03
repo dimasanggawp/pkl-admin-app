@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, Pencil, Trash2 } from 'lucide-react';
 import API from '../services/api';
 import { showSuccess, showError, getErrorMessage, confirmAction } from '../services/toastService';
 import DataTable from '../components/admin/DataTable';
@@ -109,14 +109,63 @@ function MappingImportModal({ onClose, onImported }) {
   );
 }
 
+// ── Edit Mapping Modal ───────────────────────────────────────────────────────
+function EditMappingModal({ siswa, tempatList, onClose, onSaved }) {
+  const [tempatId, setTempatId] = useState(siswa.tempatPkl?.id ? String(siswa.tempatPkl.id) : '');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await API.post('/admin/tempat-pkl/assign', {
+        siswa_id: siswa.id,
+        tempat_pkl_id: tempatId ? Number(tempatId) : null,
+      });
+      showSuccess('Assignment berhasil diperbarui');
+      onSaved();
+      onClose();
+    } catch (err) {
+      showError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted">
+        {siswa.nama} <span className="text-xs">({siswa.nisn})</span>
+      </p>
+      <div>
+        <label className="field-label">Tempat PKL</label>
+        <select value={tempatId} onChange={(e) => setTempatId(e.target.value)} className="field-input">
+          <option value="">-- Tidak ada (hapus assignment) --</option>
+          {tempatList.filter((t) => t.is_active).map((t) => (
+            <option key={t.id} value={t.id}>{t.nama}</option>
+          ))}
+        </select>
+      </div>
+      <div className="flex gap-3 pt-2">
+        <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">
+          {saving ? 'Menyimpan...' : 'Simpan'}
+        </button>
+        <button onClick={onClose} className="btn-secondary flex-1">Batal</button>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 function MappingSiswa() {
   const [students, setStudents] = useState([]);
   const [tempatList, setTempatList] = useState([]);
+  const [tahunAjaranList, setTahunAjaranList] = useState([]);
   const [search, setSearch] = useState('');
+  const [tahunAjaranFilter, setTahunAjaranFilter] = useState('all');
   const [selectedSiswaId, setSelectedSiswaId] = useState('');
   const [selectedTempatId, setSelectedTempatId] = useState('');
   const [showImport, setShowImport] = useState(false);
+  const [editingSiswa, setEditingSiswa] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -125,14 +174,17 @@ function MappingSiswa() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [siswaRes, tempatRes] = await Promise.all([
-          API.get('/admin/siswa', { params: { limit: 200 } }),
+        const [siswaRes, tempatRes, tahunRes] = await Promise.all([
+          API.get('/admin/siswa', { params: { limit: 1000 } }),
           API.get('/tempat-pkl'),
+          API.get('/admin/tahun-ajaran'),
         ]);
         const siswaData = siswaRes.data?.data || siswaRes.data;
         setStudents(Array.isArray(siswaData) ? siswaData : []);
         const tempatData = tempatRes.data?.data || tempatRes.data;
         setTempatList(Array.isArray(tempatData) ? tempatData : []);
+        const tahunData = tahunRes.data?.data || tahunRes.data;
+        setTahunAjaranList(Array.isArray(tahunData) ? tahunData : []);
         setError(null);
       } catch (err) {
         setError(getErrorMessage(err));
@@ -144,16 +196,39 @@ function MappingSiswa() {
   }, [refreshKey]);
 
   const filteredStudents = useMemo(() => {
-    if (!search) return students;
-    const q = search.toLowerCase();
-    return students.filter((s) => s.nama?.toLowerCase().includes(q) || s.nisn?.includes(q));
-  }, [students, search]);
+    let result = students;
+    if (tahunAjaranFilter !== 'all') {
+      result = result.filter((s) => String(s.tahunAjaran?.id ?? '') === tahunAjaranFilter);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((s) => s.nama?.toLowerCase().includes(q) || s.nisn?.includes(q));
+    }
+    return result;
+  }, [students, search, tahunAjaranFilter]);
 
   // Sort: unassigned first
   const sortedStudents = useMemo(() => [
     ...filteredStudents.filter((s) => !s.tempatPkl),
     ...filteredStudents.filter((s) => s.tempatPkl),
   ], [filteredStudents]);
+
+  // Breakdown of mapped/unmapped students per tahun pelajaran
+  const mappingStatsByTahun = useMemo(() => {
+    const groups = new Map();
+    for (const s of students) {
+      const key = s.tahunAjaran?.id ?? 'tanpa-tahun';
+      const label = s.tahunAjaran?.nama || 'Tanpa Tahun Pelajaran';
+      if (!groups.has(key)) {
+        groups.set(key, { label, total: 0, mapped: 0, unmapped: 0 });
+      }
+      const g = groups.get(key);
+      g.total += 1;
+      if (s.tempatPkl) g.mapped += 1;
+      else g.unmapped += 1;
+    }
+    return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [students]);
 
   const handleAssign = async () => {
     if (!selectedSiswaId) { showError('Pilih siswa terlebih dahulu'); return; }
@@ -196,11 +271,20 @@ function MappingSiswa() {
     },
     {
       key: 'actions', label: 'Aksi',
-      render: (row) => row.tempatPkl ? (
-        <button onClick={() => handleUnassign(row)} className="text-xs text-danger hover:underline">
-          Hapus Assignment
-        </button>
-      ) : null,
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <button onClick={() => setEditingSiswa(row)} title="Edit Mapping" aria-label="Edit Mapping"
+            className="text-accent hover:text-accent/70">
+            <Pencil size={18} />
+          </button>
+          {row.tempatPkl && (
+            <button onClick={() => handleUnassign(row)} title="Hapus Assignment" aria-label="Hapus Assignment"
+              className="text-danger hover:text-danger/70">
+              <Trash2 size={18} />
+            </button>
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -215,6 +299,35 @@ function MappingSiswa() {
 
       {error && (
         <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-sm text-warning">{error}</div>
+      )}
+
+      {/* Mapping status breakdown per tahun pelajaran */}
+      {!loading && mappingStatsByTahun.length > 0 && (
+        <div className="panel p-4 sm:p-6 mb-6">
+          <h2 className="text-lg font-bold text-ink mb-4">Status Mapping per Tahun Pelajaran</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm text-left border border-border rounded-xl">
+              <thead className="bg-surface-alt">
+                <tr>
+                  <th className="px-3 py-2 text-ink">Tahun Pelajaran</th>
+                  <th className="px-3 py-2 text-ink">Total Siswa</th>
+                  <th className="px-3 py-2 text-ink">Sudah Termapping</th>
+                  <th className="px-3 py-2 text-ink">Belum Termapping</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mappingStatsByTahun.map((g) => (
+                  <tr key={g.label} className="border-t border-border">
+                    <td className="px-3 py-2 text-ink font-medium">{g.label}</td>
+                    <td className="px-3 py-2 text-ink">{g.total}</td>
+                    <td className="px-3 py-2 text-success font-semibold">{g.mapped}</td>
+                    <td className="px-3 py-2 text-danger font-semibold">{g.unmapped}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {/* Manual assign panel */}
@@ -256,8 +369,29 @@ function MappingSiswa() {
         </Modal>
       )}
 
+      {editingSiswa && (
+        <Modal title="Edit Mapping Tempat PKL" onClose={() => setEditingSiswa(null)}>
+          <EditMappingModal
+            siswa={editingSiswa}
+            tempatList={tempatList}
+            onClose={() => setEditingSiswa(null)}
+            onSaved={() => setRefreshKey((k) => k + 1)}
+          />
+        </Modal>
+      )}
+
       {/* Table */}
       <FilterPanel>
+        <div>
+          <label className="field-label">Tahun Pelajaran</label>
+          <select value={tahunAjaranFilter} onChange={(e) => setTahunAjaranFilter(e.target.value)}
+            className="field-input min-w-[200px]">
+            <option value="all">Semua Tahun Pelajaran</option>
+            {tahunAjaranList.map((t) => (
+              <option key={t.id} value={String(t.id)}>{t.nama}{t.is_active ? ' (aktif)' : ''}</option>
+            ))}
+          </select>
+        </div>
         <input type="text" placeholder="Cari nama atau NISN..." value={search}
           onChange={(e) => setSearch(e.target.value)} className="field-input flex-1 min-w-[200px]" />
       </FilterPanel>

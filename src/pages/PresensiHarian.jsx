@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { MapPin } from 'lucide-react';
 import API from '../services/api';
 import { getErrorMessage } from '../services/toastService';
 import DataTable from '../components/admin/DataTable';
@@ -84,6 +85,27 @@ function PresensiHarian() {
     },
     { key: 'jam_masuk', label: 'Jam Masuk', render: (row) => row.jam_masuk || '-' },
     { key: 'jam_keluar', label: 'Jam Keluar', render: (row) => row.jam_keluar || '-' },
+    {
+      key: 'lokasi',
+      label: 'Lokasi Presensi',
+      render: (row) =>
+        row.lat_masuk != null && row.lon_masuk != null ? (
+          <a
+            href={`https://www.openstreetmap.org/?mlat=${row.lat_masuk}&mlon=${row.lon_masuk}#map=17/${row.lat_masuk}/${row.lon_masuk}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-accent hover:underline"
+            title="Lihat di peta"
+          >
+            <MapPin size={14} />
+            <span>
+              {Number(row.lat_masuk).toFixed(6)}, {Number(row.lon_masuk).toFixed(6)}
+            </span>
+          </a>
+        ) : (
+          <span className="text-muted">-</span>
+        ),
+    },
   ];
 
   return (
