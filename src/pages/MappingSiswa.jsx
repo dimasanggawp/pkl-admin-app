@@ -229,6 +229,8 @@ function MappingSiswa() {
   const [editingSiswa, setEditingSiswa] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 20;
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -273,6 +275,13 @@ function MappingSiswa() {
     ...filteredStudents.filter((s) => !s.tempatPkl),
     ...filteredStudents.filter((s) => s.tempatPkl),
   ], [filteredStudents]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedStudents.length / PAGE_SIZE));
+
+  const paginatedStudents = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return sortedStudents.slice(start, start + PAGE_SIZE);
+  }, [sortedStudents, currentPage]);
 
   // Breakdown of mapped/unmapped students per tahun pelajaran
   const mappingStatsByTahun = useMemo(() => {
@@ -412,7 +421,7 @@ function MappingSiswa() {
       <FilterPanel>
         <div>
           <label className="field-label">Tahun Pelajaran</label>
-          <select value={tahunAjaranFilter} onChange={(e) => setTahunAjaranFilter(e.target.value)}
+          <select value={tahunAjaranFilter} onChange={(e) => { setTahunAjaranFilter(e.target.value); setCurrentPage(1); }}
             className="field-input min-w-[200px]">
             <option value="all">Semua Tahun Pelajaran</option>
             {tahunAjaranList.map((t) => (
@@ -421,16 +430,79 @@ function MappingSiswa() {
           </select>
         </div>
         <input type="text" placeholder="Cari nama atau NISN..." value={search}
-          onChange={(e) => setSearch(e.target.value)} className="field-input flex-1 min-w-[200px]" />
+          onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} className="field-input flex-1 min-w-[200px]" />
       </FilterPanel>
 
       <div className="mt-4">
         {loading ? (
           <div className="p-6 text-center text-muted">Memuat data...</div>
         ) : (
-          <DataTable columns={columns} data={sortedStudents} emptyMessage="Tidak ada siswa ditemukan" />
+          <>
+            <DataTable columns={columns} data={paginatedStudents} emptyMessage="Tidak ada siswa ditemukan" />
+            {totalPages > 1 && (
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+            )}
+          </>
         )}
       </div>
+    </div>
+  );
+}
+
+function Pagination({ currentPage, totalPages, onPageChange }) {
+  function getPages(delta) {
+    const pages = [];
+    const left = Math.max(2, currentPage - delta);
+    const right = Math.min(totalPages - 1, currentPage + delta);
+
+    pages.push(1);
+    if (left > 2) pages.push('...');
+    for (let p = left; p <= right; p++) pages.push(p);
+    if (right < totalPages - 1) pages.push('...');
+    if (totalPages > 1) pages.push(totalPages);
+    return pages;
+  }
+
+  const btnBase =
+    'h-9 min-w-[2.25rem] px-2 flex items-center justify-center rounded-lg text-sm font-medium transition-colors select-none';
+  const btnPage = `${btnBase} bg-surface-alt text-ink hover:bg-border`;
+  const btnActive = `${btnBase} bg-accent text-white pointer-events-none`;
+  const btnEllipsis = `${btnBase} text-muted pointer-events-none`;
+  const btnNav = `${btnBase} bg-surface border border-border text-ink hover:bg-surface-alt disabled:opacity-40 disabled:cursor-not-allowed`;
+
+  const renderPages = (pages) =>
+    pages.map((p, i) => {
+      if (p === '...') return <span key={`ellipsis-${i}`} className={btnEllipsis}>…</span>;
+      return (
+        <button key={p} onClick={() => onPageChange(p)} className={p === currentPage ? btnActive : btnPage}>
+          {p}
+        </button>
+      );
+    });
+
+  return (
+    <div className="mt-6 flex flex-col items-center gap-2">
+      <div className="flex items-center gap-1 sm:hidden">
+        <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className={btnNav}>
+          ‹ Prev
+        </button>
+        {renderPages(getPages(1))}
+        <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className={btnNav}>
+          Next ›
+        </button>
+      </div>
+      <div className="hidden sm:flex items-center gap-1">
+        <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className={btnNav}>
+          ‹ Prev
+        </button>
+        {renderPages(getPages(2))}
+        <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className={btnNav}>
+          Next ›
+        </button>
+      </div>
+      <p className="text-xs text-muted">
+        Halaman {currentPage} dari {totalPages}
+      </p>
     </div>
   );
 }
