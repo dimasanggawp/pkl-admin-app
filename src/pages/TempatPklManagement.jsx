@@ -288,10 +288,31 @@ function TempatPklManagement() {
 
   const columns = [
     { key: 'nama', label: 'Nama' },
-    { key: 'alamat', label: 'Alamat', render: (row) => row.alamat || '-' },
+    {
+      key: 'alamat', label: 'Alamat',
+      render: (row) => (row.alamat
+        ? (
+          <a
+            href={`https://www.openstreetmap.org/?mlat=${row.lat}&mlon=${row.lon}#map=17/${row.lat}/${row.lon}`}
+            target="_blank" rel="noopener noreferrer"
+            className="text-accent hover:underline"
+          >
+            {row.alamat}
+          </a>
+        )
+        : '-'),
+    },
     {
       key: 'koordinat', label: 'Koordinat',
-      render: (row) => `${Number(row.lat).toFixed(4)}, ${Number(row.lon).toFixed(4)}`,
+      render: (row) => (
+        <a
+          href={`https://www.openstreetmap.org/?mlat=${row.lat}&mlon=${row.lon}#map=17/${row.lat}/${row.lon}`}
+          target="_blank" rel="noopener noreferrer"
+          className="text-accent hover:underline"
+        >
+          {`${Number(row.lat).toFixed(4)}, ${Number(row.lon).toFixed(4)}`}
+        </a>
+      ),
     },
     { key: 'radius', label: 'Radius (m)', render: (row) => `${row.radius}m` },
     {
