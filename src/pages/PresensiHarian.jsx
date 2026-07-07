@@ -106,6 +106,26 @@ function PresensiHarian() {
           <span className="text-muted">-</span>
         ),
     },
+    {
+      key: 'jarak',
+      label: 'Jarak ke Tempat PKL',
+      render: (row) => {
+        if (row.jarak_meter == null) {
+          return <span className="text-muted">-</span>;
+        }
+        const jarak = row.jarak_meter;
+        const label = jarak >= 1000 ? `${(jarak / 1000).toFixed(2)} km` : `${jarak} m`;
+        const isFar = jarak > 100;
+        return (
+          <span
+            className={isFar ? 'text-danger font-medium' : 'text-success font-medium'}
+            title={row.tempat_pkl?.nama ? `Tempat PKL: ${row.tempat_pkl.nama}` : undefined}
+          >
+            {label}
+          </span>
+        );
+      },
+    },
   ];
 
   return (
