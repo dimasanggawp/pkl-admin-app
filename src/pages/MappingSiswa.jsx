@@ -312,9 +312,23 @@ function MappingSiswa() {
     { key: 'kelas', label: 'Kelas', render: (row) => row.kelas || '-' },
     {
       key: 'tempat_pkl', label: 'Tempat PKL',
-      render: (row) => row.tempatPkl
-        ? <span className="text-success font-medium">{row.tempatPkl.nama}</span>
-        : <span className="text-muted italic">Belum di-assign</span>,
+      render: (row) => {
+        if (!row.tempatPkl) return <span className="text-muted italic">Belum di-assign</span>;
+        const { nama, lat, lon } = row.tempatPkl;
+        if (lat == null || lon == null) {
+          return <span className="text-success font-medium">{nama}</span>;
+        }
+        return (
+          <a
+            href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-success font-medium underline hover:text-success/70"
+          >
+            {nama}
+          </a>
+        );
+      },
     },
     {
       key: 'actions', label: 'Aksi',
