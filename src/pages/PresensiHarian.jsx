@@ -1,10 +1,98 @@
 import { useState, useEffect, useMemo } from 'react';
 import { MapPin } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import API from '../services/api';
 import { getErrorMessage } from '../services/toastService';
 import DataTable from '../components/admin/DataTable';
 import FilterPanel from '../components/admin/FilterPanel';
 import StatsCard from '../components/admin/StatsCard';
+import Modal from '../components/admin/Modal';
+import 'leaflet/dist/leaflet.css';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow });
+
+function pinIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="${color}" stroke="#fff" stroke-width="1.5"/>
+      <circle cx="14" cy="14" r="5.5" fill="#fff"/>
+    </svg>`,
+    iconSize: [28, 40],
+    iconAnchor: [14, 40],
+    popupAnchor: [0, -36],
+  });
+}
+
+const TEMPAT_PKL_ICON = pinIcon('#2563EB');
+const PRESENSI_ICON = pinIcon('#DC2626');
+
+function FitBounds({ points }) {
+  const map = useMap();
+  useEffect(() => {
+    if (points.length === 2) {
+      map.fitBounds(points, { padding: [40, 40] });
+    }
+  }, [map, points]);
+  return null;
+}
+
+function JarakMapModal({ row, onClose }) {
+  const presensiPoint = [Number(row.lat_masuk), Number(row.lon_masuk)];
+  const tempatPoint = [Number(row.tempat_pkl.lat), Number(row.tempat_pkl.lon)];
+  const points = [presensiPoint, tempatPoint];
+  const jarakLabel = row.jarak_meter >= 1000
+    ? `${(row.jarak_meter / 1000).toFixed(2)} km`
+    : `${row.jarak_meter} m`;
+
+  return (
+    <Modal title={`Jarak Presensi - ${row.nama}`} onClose={onClose}>
+      <div className="space-y-3">
+        <p className="text-sm text-muted">
+          Jarak garis lurus (Haversine) antara lokasi check-in dan{' '}
+          <span className="font-medium text-ink">{row.tempat_pkl.nama}</span>:{' '}
+          <span className={row.jarak_meter > 100 ? 'text-danger font-semibold' : 'text-success font-semibold'}>
+            {jarakLabel}
+          </span>
+        </p>
+        <div className="h-80 w-full overflow-hidden rounded border border-border">
+          <MapContainer center={presensiPoint} zoom={16} style={{ height: '100%', width: '100%' }}>
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution="&copy; OpenStreetMap contributors"
+            />
+            <Marker position={presensiPoint} icon={PRESENSI_ICON}>
+              <Popup>Lokasi presensi {row.nama}</Popup>
+            </Marker>
+            <Marker position={tempatPoint} icon={TEMPAT_PKL_ICON}>
+              <Popup>Tempat PKL: {row.tempat_pkl.nama}</Popup>
+            </Marker>
+            <Polyline positions={points} pathOptions={{ color: '#EF4444', dashArray: '6 6', weight: 3 }} />
+            <FitBounds points={points} />
+          </MapContainer>
+        </div>
+        <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-full border border-white" style={{ backgroundColor: '#DC2626' }} />
+            Lokasi presensi siswa
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-full border border-white" style={{ backgroundColor: '#2563EB' }} />
+            Tempat PKL
+          </span>
+        </div>
+        <p className="text-xs text-muted">
+          Garis putus-putus merah menunjukkan jarak lurus, bukan rute jalan sebenarnya.
+        </p>
+      </div>
+    </Modal>
+  );
+}
 
 function todayISODate() {
   return new Date().toISOString().split('T')[0];
@@ -25,6 +113,7 @@ function PresensiHarian() {
   const [siswa, setSiswa] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mapRow, setMapRow] = useState(null);
 
   useEffect(() => {
     const fetchPresensi = async () => {
@@ -116,13 +205,22 @@ function PresensiHarian() {
         const jarak = row.jarak_meter;
         const label = jarak >= 1000 ? `${(jarak / 1000).toFixed(2)} km` : `${jarak} m`;
         const isFar = jarak > 100;
+        const canShowMap =
+          row.lat_masuk != null && row.lon_masuk != null && row.tempat_pkl?.lat != null && row.tempat_pkl?.lon != null;
+        if (!canShowMap) {
+          return (
+            <span className={isFar ? 'text-danger font-medium' : 'text-success font-medium'}>{label}</span>
+          );
+        }
         return (
-          <span
-            className={isFar ? 'text-danger font-medium' : 'text-success font-medium'}
-            title={row.tempat_pkl?.nama ? `Tempat PKL: ${row.tempat_pkl.nama}` : undefined}
+          <button
+            type="button"
+            onClick={() => setMapRow(row)}
+            className={`font-medium underline decoration-dotted hover:opacity-80 ${isFar ? 'text-danger' : 'text-success'}`}
+            title={`Lihat jarak lurus ke ${row.tempat_pkl.nama}`}
           >
             {label}
-          </span>
+          </button>
         );
       },
     },
@@ -213,6 +311,8 @@ function PresensiHarian() {
       ) : (
         <DataTable columns={columns} data={filteredSiswa} emptyMessage="Tidak ada data siswa." />
       )}
+
+      {mapRow && <JarakMapModal row={mapRow} onClose={() => setMapRow(null)} />}
     </div>
   );
 }
