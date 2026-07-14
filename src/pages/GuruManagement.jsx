@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Pencil, Power, PowerOff, Trash2, Upload } from 'lucide-react';
+import { Pencil, Power, PowerOff, Trash2, Upload, Users, UserCheck, UserX, GraduationCap } from 'lucide-react';
 import API from '../services/api';
 import { showSuccess, showError, getErrorMessage, confirmAction } from '../services/toastService';
 import DataTable from '../components/admin/DataTable';
 import FilterPanel from '../components/admin/FilterPanel';
 import Modal from '../components/admin/Modal';
 import Spinner from '../components/admin/Spinner';
+import StatsCard from '../components/admin/StatsCard';
+import Pagination from '../components/admin/Pagination';
 
 const IMPORT_MAX_SIZE = 5 * 1024 * 1024;
 const IMPORT_VALID_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
+const PAGE_SIZE = 10;
 
 function GuruManagement() {
   const [gurus, setGurus] = useState([]);
@@ -21,14 +24,27 @@ function GuruManagement() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [stats, setStats] = useState({ total: 0, activeCount: 0, inactiveCount: 0, totalSiswaBinaan: 0 });
 
   useEffect(() => {
     const fetchGurus = async () => {
       try {
         setLoading(true);
-        const response = await API.get('/admin/guru', { params: { search } });
-        const data = response.data?.data || response.data;
+        const response = await API.get('/admin/guru', {
+          params: { search, page: currentPage, limit: PAGE_SIZE },
+        });
+        const body = response.data;
+        const data = body?.data || [];
         setGurus(Array.isArray(data) ? data : []);
+        setTotalPages(body?.totalPages || 1);
+        setStats({
+          total: body?.total ?? data.length,
+          activeCount: body?.activeCount ?? 0,
+          inactiveCount: body?.inactiveCount ?? 0,
+          totalSiswaBinaan: body?.totalSiswaBinaan ?? 0,
+        });
         setError(null);
       } catch (err) {
         setError(getErrorMessage(err));
@@ -40,7 +56,7 @@ function GuruManagement() {
     };
 
     fetchGurus();
-  }, [search, refreshKey]);
+  }, [search, currentPage, refreshKey]);
 
   const toggleSelect = (id) => {
     setSelectedIds((prev) => {
@@ -245,12 +261,26 @@ function GuruManagement() {
         </div>
       )}
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatsCard label="Total Guru" value={stats.total} icon={<Users size={20} />} />
+        <StatsCard label="Guru Aktif" value={stats.activeCount} icon={<UserCheck size={20} />} />
+        <StatsCard label="Guru Nonaktif" value={stats.inactiveCount} icon={<UserX size={20} />} />
+        <StatsCard
+          label="Siswa Dibimbing"
+          value={stats.totalSiswaBinaan}
+          icon={<GraduationCap size={20} />}
+        />
+      </div>
+
       <FilterPanel>
         <input
           type="text"
           placeholder="Cari nama atau NIY..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
           className="field-input flex-1 min-w-[200px]"
         />
       </FilterPanel>
@@ -312,7 +342,19 @@ function GuruManagement() {
         {loading ? (
           <div className="p-6 text-center text-muted">Memuat data guru...</div>
         ) : (
-          <DataTable columns={columns} data={gurus} emptyMessage="Tidak ada guru ditemukan" />
+          <>
+            <DataTable columns={columns} data={gurus} emptyMessage="Tidak ada guru ditemukan" />
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+              <p className="text-xs text-muted">
+                Halaman {currentPage} dari {totalPages} &middot; {stats.total} guru total
+              </p>
+            </div>
+          </>
         )}
       </div>
     </div>
