@@ -5,6 +5,7 @@ import { showSuccess, showError, getErrorMessage, confirmAction } from '../servi
 import DataTable from '../components/admin/DataTable';
 import FilterPanel from '../components/admin/FilterPanel';
 import Modal from '../components/admin/Modal';
+import Spinner from '../components/admin/Spinner';
 
 const IMPORT_MAX_SIZE = 5 * 1024 * 1024;
 const IMPORT_VALID_EXTENSIONS = ['.xlsx', '.xls'];
@@ -14,6 +15,7 @@ function MappingImportModal({ onClose, onImported }) {
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState('');
   const [preview, setPreview] = useState(null);
+  const [previewing, setPreviewing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
 
@@ -45,12 +47,13 @@ function MappingImportModal({ onClose, onImported }) {
 
   const handlePreview = async () => {
     if (!file) { showError('Pilih file Excel terlebih dahulu'); return; }
+    setPreviewing(true);
     try {
       const form = new FormData();
       form.append('file', file);
       const res = await API.post('/admin/tempat-pkl/mapping/preview', form);
       setPreview(res.data.data);
-    } catch (err) { showError(getErrorMessage(err)); }
+    } catch (err) { showError(getErrorMessage(err)); } finally { setPreviewing(false); }
   };
 
   const handleImport = async () => {
@@ -79,7 +82,15 @@ function MappingImportModal({ onClose, onImported }) {
         {file && <p className="text-xs text-muted mt-1">{file.name}</p>}
       </div>
       {file && !preview && !importResult && (
-        <button type="button" onClick={handlePreview} className="btn-primary w-full">Preview</button>
+        <button
+          type="button"
+          onClick={handlePreview}
+          disabled={previewing}
+          className="btn-primary w-full flex items-center justify-center gap-2"
+        >
+          {previewing && <Spinner />}
+          {previewing ? 'Memuat preview...' : 'Preview'}
+        </button>
       )}
       {preview && (
         <div>
@@ -92,7 +103,13 @@ function MappingImportModal({ onClose, onImported }) {
             </ul>
           )}
           {preview.valid?.length > 0 && (
-            <button type="button" onClick={handleImport} disabled={importing} className="btn-primary w-full">
+            <button
+              type="button"
+              onClick={handleImport}
+              disabled={importing}
+              className="btn-primary w-full flex items-center justify-center gap-2"
+            >
+              {importing && <Spinner />}
               {importing ? 'Mengimpor...' : `Import ${preview.valid.length} baris`}
             </button>
           )}

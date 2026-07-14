@@ -7,6 +7,7 @@ import { showSuccess, showError, getErrorMessage, confirmAction } from '../servi
 import DataTable from '../components/admin/DataTable';
 import FilterPanel from '../components/admin/FilterPanel';
 import Modal from '../components/admin/Modal';
+import Spinner from '../components/admin/Spinner';
 import 'leaflet/dist/leaflet.css';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -506,10 +507,20 @@ function TempatPklImportModal({ onClose, onImported }) {
 
       {file && (
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
-          <button onClick={handlePreview} disabled={previewing} className="btn-secondary flex-1">
+          <button
+            onClick={handlePreview}
+            disabled={previewing}
+            className="btn-secondary flex-1 flex items-center justify-center gap-2"
+          >
+            {previewing && <Spinner />}
             {previewing ? 'Memuat preview...' : 'Preview Data'}
           </button>
-          <button onClick={handleImport} disabled={importing} className="btn-primary flex-1">
+          <button
+            onClick={handleImport}
+            disabled={importing}
+            className="btn-primary flex-1 flex items-center justify-center gap-2"
+          >
+            {importing && <Spinner />}
             {importing ? 'Mengimpor...' : 'Import Data'}
           </button>
         </div>
