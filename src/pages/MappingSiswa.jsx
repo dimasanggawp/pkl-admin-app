@@ -10,8 +10,24 @@ import Spinner from '../components/admin/Spinner';
 const IMPORT_MAX_SIZE = 5 * 1024 * 1024;
 const IMPORT_VALID_EXTENSIONS = ['.xlsx', '.xls'];
 
+const IMPORT_MODES = {
+  tempat: {
+    templateUrl: '/admin/tempat-pkl/mapping/template',
+    templateFilename: 'template-mapping-tempat-pkl.xlsx',
+    previewUrl: '/admin/tempat-pkl/mapping/preview',
+    importUrl: '/admin/tempat-pkl/mapping/import',
+  },
+  guru: {
+    templateUrl: '/admin/mapping-guru/template',
+    templateFilename: 'template-mapping-guru.xlsx',
+    previewUrl: '/admin/mapping-guru/preview',
+    importUrl: '/admin/mapping-guru/import',
+  },
+};
+
 // ── Excel Import Modal ─────────────────────────────────────────────────────────
-function MappingImportModal({ onClose, onImported }) {
+function MappingImportModal({ mode = 'tempat', onClose, onImported }) {
+  const { templateUrl, templateFilename, previewUrl, importUrl } = IMPORT_MODES[mode];
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState('');
   const [preview, setPreview] = useState(null);
@@ -33,11 +49,11 @@ function MappingImportModal({ onClose, onImported }) {
 
   const handleDownloadTemplate = async () => {
     try {
-      const res = await API.get('/admin/tempat-pkl/mapping/template', { responseType: 'blob' });
+      const res = await API.get(templateUrl, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'template-mapping-tempat-pkl.xlsx';
+      a.download = templateFilename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -51,7 +67,7 @@ function MappingImportModal({ onClose, onImported }) {
     try {
       const form = new FormData();
       form.append('file', file);
-      const res = await API.post('/admin/tempat-pkl/mapping/preview', form);
+      const res = await API.post(previewUrl, form);
       setPreview(res.data.data);
     } catch (err) { showError(getErrorMessage(err)); } finally { setPreviewing(false); }
   };
@@ -64,7 +80,7 @@ function MappingImportModal({ onClose, onImported }) {
     try {
       const form = new FormData();
       form.append('file', file);
-      const res = await API.post('/admin/tempat-pkl/mapping/import', form);
+      const res = await API.post(importUrl, form);
       setImportResult(res.data.data);
       onImported?.();
     } catch (err) { showError(getErrorMessage(err)); } finally { setImporting(false); }
@@ -122,6 +138,105 @@ function MappingImportModal({ onClose, onImported }) {
         </div>
       )}
       <button type="button" onClick={onClose} className="btn-secondary w-full">Tutup</button>
+    </div>
+  );
+}
+
+// ── Edit Mapping Guru Modal ──────────────────────────────────────────────────
+function EditGuruMappingModal({ siswa, guruList, onClose, onSaved }) {
+  const [guruId, setGuruId] = useState(siswa.guruPembimbing?.id ? String(siswa.guruPembimbing.id) : '');
+  const [query, setQuery] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const filteredGuru = useMemo(() => {
+    if (!query.trim()) return guruList;
+    const q = query.toLowerCase();
+    return guruList.filter((g) => g.nama?.toLowerCase().includes(q) || g.niy?.toLowerCase().includes(q));
+  }, [guruList, query]);
+
+  const selected = guruList.find((g) => String(g.id) === guruId);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await API.put(`/admin/siswa/${siswa.id}`, { guru_id: guruId ? Number(guruId) : null });
+      showSuccess('Guru pembimbing berhasil diperbarui');
+      onSaved();
+      onClose();
+    } catch (err) {
+      showError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted">
+        {siswa.nama} <span className="text-xs">({siswa.nisn})</span>
+      </p>
+
+      <div>
+        <label className="field-label">Cari Guru</label>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Cari nama atau NIY guru..."
+          className="field-input"
+        />
+      </div>
+
+      <div className="border border-border rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setGuruId('')}
+          className={`w-full text-left px-3 py-2.5 text-sm border-b border-border transition-colors ${
+            guruId === '' ? 'bg-accent-soft text-accent font-semibold' : 'text-muted hover:bg-surface-alt'
+          }`}
+        >
+          — Tidak ada (hapus assignment) —
+        </button>
+
+        <div className="max-h-56 overflow-y-auto">
+          {filteredGuru.length === 0 ? (
+            <p className="px-3 py-4 text-sm text-muted text-center">Tidak ada guru ditemukan</p>
+          ) : (
+            <table className="min-w-full text-sm text-left">
+              <tbody>
+                {filteredGuru.map((g) => {
+                  const isSelected = String(g.id) === guruId;
+                  return (
+                    <tr
+                      key={g.id}
+                      onClick={() => setGuruId(String(g.id))}
+                      className={`cursor-pointer border-b border-border last:border-b-0 transition-colors ${
+                        isSelected ? 'bg-accent-soft' : 'hover:bg-surface-alt'
+                      }`}
+                    >
+                      <td className="px-3 py-2">
+                        <p className={`font-medium ${isSelected ? 'text-accent' : 'text-ink'}`}>{g.nama}</p>
+                        <p className="text-xs text-muted">{g.niy}</p>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      <p className="text-xs text-muted">
+        Terpilih: <span className="text-ink font-medium">{selected?.nama || 'Tidak ada'}</span>
+      </p>
+
+      <div className="flex gap-3 pt-2">
+        <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">
+          {saving ? 'Menyimpan...' : 'Simpan'}
+        </button>
+        <button onClick={onClose} className="btn-secondary flex-1">Batal</button>
+      </div>
     </div>
   );
 }
@@ -237,8 +352,10 @@ function EditMappingModal({ siswa, tempatList, onClose, onSaved }) {
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 function MappingSiswa() {
+  const [activeTab, setActiveTab] = useState('tempat'); // 'tempat' | 'guru'
   const [students, setStudents] = useState([]);
   const [tempatList, setTempatList] = useState([]);
+  const [guruList, setGuruList] = useState([]);
   const [tahunAjaranList, setTahunAjaranList] = useState([]);
   const [search, setSearch] = useState('');
   const [tahunAjaranFilter, setTahunAjaranFilter] = useState('all');
@@ -250,22 +367,31 @@ function MappingSiswa() {
   const PAGE_SIZE = 20;
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Bulk-assign (guru pembimbing) state
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkGuruId, setBulkGuruId] = useState('');
+  const [bulkAssigning, setBulkAssigning] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [siswaRes, tempatRes, tahunRes] = await Promise.all([
+        const [siswaRes, tempatRes, guruRes, tahunRes] = await Promise.all([
           API.get('/admin/siswa', { params: { limit: 1000 } }),
           API.get('/tempat-pkl'),
+          API.get('/admin/guru', { params: { limit: 1000 } }),
           API.get('/admin/tahun-ajaran'),
         ]);
         const siswaData = siswaRes.data?.data || siswaRes.data;
         setStudents(Array.isArray(siswaData) ? siswaData : []);
         const tempatData = tempatRes.data?.data || tempatRes.data;
         setTempatList(Array.isArray(tempatData) ? tempatData : []);
+        const guruData = guruRes.data?.data || guruRes.data;
+        setGuruList(Array.isArray(guruData) ? guruData : []);
         const tahunData = tahunRes.data?.data || tahunRes.data;
         setTahunAjaranList(Array.isArray(tahunData) ? tahunData : []);
         setError(null);
+        setSelectedIds(new Set());
       } catch (err) {
         setError(getErrorMessage(err));
       } finally {
@@ -287,11 +413,14 @@ function MappingSiswa() {
     return result;
   }, [students, search, tahunAjaranFilter]);
 
-  // Sort: unassigned first
-  const sortedStudents = useMemo(() => [
-    ...filteredStudents.filter((s) => !s.tempatPkl),
-    ...filteredStudents.filter((s) => s.tempatPkl),
-  ], [filteredStudents]);
+  // Sort: unassigned first (per active tab's mapping target)
+  const sortedStudents = useMemo(() => {
+    const isMapped = (s) => (activeTab === 'guru' ? !!s.guruPembimbing : !!s.tempatPkl);
+    return [
+      ...filteredStudents.filter((s) => !isMapped(s)),
+      ...filteredStudents.filter((s) => isMapped(s)),
+    ];
+  }, [filteredStudents, activeTab]);
 
   const totalPages = Math.max(1, Math.ceil(sortedStudents.length / PAGE_SIZE));
 
@@ -302,6 +431,7 @@ function MappingSiswa() {
 
   // Breakdown of mapped/unmapped students per tahun pelajaran
   const mappingStatsByTahun = useMemo(() => {
+    const isMapped = (s) => (activeTab === 'guru' ? !!s.guruPembimbing : !!s.tempatPkl);
     const groups = new Map();
     for (const s of students) {
       const key = s.tahunAjaran?.id ?? 'tanpa-tahun';
@@ -311,11 +441,11 @@ function MappingSiswa() {
       }
       const g = groups.get(key);
       g.total += 1;
-      if (s.tempatPkl) g.mapped += 1;
+      if (isMapped(s)) g.mapped += 1;
       else g.unmapped += 1;
     }
     return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
-  }, [students]);
+  }, [students, activeTab]);
 
   const handleUnassign = async (siswa) => {
     const confirmed = await confirmAction({
@@ -332,7 +462,69 @@ function MappingSiswa() {
     } catch (err) { showError(getErrorMessage(err)); }
   };
 
-  const columns = [
+  const handleUnassignGuru = async (siswa) => {
+    const confirmed = await confirmAction({
+      title: `Hapus guru pembimbing ${siswa.nama}?`,
+      text: 'Siswa tidak akan ter-assign ke guru manapun.',
+      confirmButtonText: 'Hapus',
+      danger: true,
+    });
+    if (!confirmed) return;
+    try {
+      await API.put(`/admin/siswa/${siswa.id}`, { guru_id: null });
+      showSuccess('Guru pembimbing berhasil dihapus');
+      setRefreshKey((k) => k + 1);
+    } catch (err) { showError(getErrorMessage(err)); }
+  };
+
+  // ── Bulk-assign guru pembimbing (checkbox selection) ────────────────────────
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const allVisibleSelected = paginatedStudents.length > 0 && paginatedStudents.every((s) => selectedIds.has(s.id));
+
+  const toggleSelectAllVisible = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        paginatedStudents.forEach((s) => next.delete(s.id));
+      } else {
+        paginatedStudents.forEach((s) => next.add(s.id));
+      }
+      return next;
+    });
+  };
+
+  const handleBulkAssignGuru = async () => {
+    if (selectedIds.size === 0) return;
+    if (!bulkGuruId) { showError('Pilih guru pembimbing terlebih dahulu'); return; }
+    const guruName = guruList.find((g) => String(g.id) === bulkGuruId)?.nama;
+    const confirmed = await confirmAction({
+      title: `Assign ${selectedIds.size} siswa ke ${guruName}?`,
+      confirmButtonText: 'Assign',
+    });
+    if (!confirmed) return;
+    setBulkAssigning(true);
+    try {
+      const assignments = Array.from(selectedIds).map((siswa_id) => ({ siswa_id, guru_id: Number(bulkGuruId) }));
+      const res = await API.post('/admin/siswa/bulk-assign-guru', { assignments });
+      showSuccess(res.data.message || 'Assignment massal berhasil');
+      setSelectedIds(new Set());
+      setBulkGuruId('');
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      showError(getErrorMessage(err));
+    } finally {
+      setBulkAssigning(false);
+    }
+  };
+
+  const columnsTempat = [
     { key: 'nisn', label: 'NISN' },
     { key: 'nama', label: 'Nama' },
     { key: 'kelas', label: 'Kelas', render: (row) => row.kelas || '-' },
@@ -375,17 +567,108 @@ function MappingSiswa() {
     },
   ];
 
+  const columnsGuru = [
+    {
+      key: 'select',
+      label: (
+        <input type="checkbox" checked={allVisibleSelected} onChange={toggleSelectAllVisible}
+          aria-label="Pilih semua di halaman ini" />
+      ),
+      render: (row) => (
+        <input type="checkbox" checked={selectedIds.has(row.id)} onChange={() => toggleSelect(row.id)}
+          aria-label={`Pilih ${row.nama}`} />
+      ),
+    },
+    { key: 'nisn', label: 'NISN' },
+    { key: 'nama', label: 'Nama' },
+    { key: 'kelas', label: 'Kelas', render: (row) => row.kelas || '-' },
+    {
+      key: 'guru', label: 'Guru Pembimbing',
+      render: (row) => (row.guruPembimbing
+        ? <span className="text-success font-medium">{row.guruPembimbing.nama}</span>
+        : <span className="text-muted italic">Belum di-assign</span>),
+    },
+    {
+      key: 'actions', label: 'Aksi',
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <button onClick={() => setEditingSiswa(row)} title="Edit Guru Pembimbing" aria-label="Edit Guru Pembimbing"
+            className="text-accent hover:text-accent/70">
+            <Pencil size={18} />
+          </button>
+          {row.guruPembimbing && (
+            <button onClick={() => handleUnassignGuru(row)} title="Hapus Guru Pembimbing" aria-label="Hapus Guru Pembimbing"
+              className="text-danger hover:text-danger/70">
+              <Trash2 size={18} />
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const columns = activeTab === 'guru' ? columnsGuru : columnsTempat;
+
+  const switchTab = (tab) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+    setSelectedIds(new Set());
+    setBulkGuruId('');
+  };
+
   return (
     <div className="p-4 sm:p-6">
-      <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">Mapping Siswa → Tempat PKL</h1>
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">
+          Mapping Siswa → {activeTab === 'guru' ? 'Guru Pembimbing' : 'Tempat PKL'}
+        </h1>
         <button onClick={() => setShowImport(true)} className="btn-secondary flex items-center gap-2">
           <Upload size={16} /> Import Excel
         </button>
       </div>
 
+      <div className="flex gap-2 mb-6 border-b border-border">
+        <button
+          onClick={() => switchTab('tempat')}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+            activeTab === 'tempat' ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-ink'
+          }`}
+        >
+          Tempat PKL
+        </button>
+        <button
+          onClick={() => switchTab('guru')}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+            activeTab === 'guru' ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-ink'
+          }`}
+        >
+          Guru Pembimbing
+        </button>
+      </div>
+
       {error && (
         <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-sm text-warning">{error}</div>
+      )}
+
+      {activeTab === 'guru' && selectedIds.size > 0 && (
+        <div className="mb-6 p-4 rounded-xl border border-accent/30 bg-accent-soft flex flex-wrap items-center gap-3">
+          <span className="text-sm font-semibold text-ink">{selectedIds.size} siswa dipilih</span>
+          <select value={bulkGuruId} onChange={(e) => setBulkGuruId(e.target.value)} className="field-input min-w-[200px]">
+            <option value="">Pilih guru pembimbing...</option>
+            {guruList.map((g) => (
+              <option key={g.id} value={String(g.id)}>{g.nama} ({g.niy})</option>
+            ))}
+          </select>
+          <button
+            onClick={handleBulkAssignGuru}
+            disabled={bulkAssigning || !bulkGuruId}
+            className="btn-primary flex items-center gap-2"
+          >
+            {bulkAssigning && <Spinner />}
+            {bulkAssigning ? 'Memproses...' : `Assign ${selectedIds.size} Siswa`}
+          </button>
+          <button onClick={() => setSelectedIds(new Set())} className="btn-secondary">Batal</button>
+        </div>
       )}
 
       {/* Mapping status breakdown per tahun pelajaran */}
@@ -418,12 +701,30 @@ function MappingSiswa() {
       )}
 
       {showImport && (
-        <Modal title="Import Mapping dari Excel" onClose={() => setShowImport(false)}>
-          <MappingImportModal onClose={() => setShowImport(false)} onImported={() => setRefreshKey((k) => k + 1)} />
+        <Modal
+          title={activeTab === 'guru' ? 'Import Mapping Guru dari Excel' : 'Import Mapping Tempat PKL dari Excel'}
+          onClose={() => setShowImport(false)}
+        >
+          <MappingImportModal
+            mode={activeTab}
+            onClose={() => setShowImport(false)}
+            onImported={() => setRefreshKey((k) => k + 1)}
+          />
         </Modal>
       )}
 
-      {editingSiswa && (
+      {editingSiswa && activeTab === 'guru' && (
+        <Modal title="Edit Guru Pembimbing" onClose={() => setEditingSiswa(null)}>
+          <EditGuruMappingModal
+            siswa={editingSiswa}
+            guruList={guruList}
+            onClose={() => setEditingSiswa(null)}
+            onSaved={() => setRefreshKey((k) => k + 1)}
+          />
+        </Modal>
+      )}
+
+      {editingSiswa && activeTab === 'tempat' && (
         <Modal title="Edit Mapping Tempat PKL" onClose={() => setEditingSiswa(null)}>
           <EditMappingModal
             siswa={editingSiswa}
