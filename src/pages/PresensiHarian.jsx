@@ -98,6 +98,11 @@ function todayISODate() {
   return new Date().toISOString().split('T')[0];
 }
 
+function formatJamUpload(value) {
+  if (!value) return '-';
+  return new Date(value).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
 const STATUS_BADGE = {
   hadir: 'bg-success/10 text-success',
   sakit: 'bg-warning/10 text-warning',
@@ -173,7 +178,11 @@ function PresensiHarian() {
       ),
     },
     { key: 'jam_masuk', label: 'Jam Masuk', render: (row) => row.jam_masuk || '-' },
-    { key: 'jam_keluar', label: 'Jam Keluar', render: (row) => row.jam_keluar || '-' },
+    {
+      key: 'jam_upload_jurnal',
+      label: 'Jam Upload Jurnal',
+      render: (row) => formatJamUpload(row.jam_upload_jurnal),
+    },
     {
       key: 'lokasi',
       label: 'Lokasi Presensi',
