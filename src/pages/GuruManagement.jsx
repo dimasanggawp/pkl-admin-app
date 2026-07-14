@@ -19,6 +19,8 @@ function GuruManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useEffect(() => {
     const fetchGurus = async () => {
@@ -33,11 +35,57 @@ function GuruManagement() {
         setGurus([]);
       } finally {
         setLoading(false);
+        setSelectedIds(new Set());
       }
     };
 
     fetchGurus();
   }, [search, refreshKey]);
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) =>
+      prev.size === gurus.length ? new Set() : new Set(gurus.map((g) => g.id))
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    const count = selectedIds.size;
+    if (count === 0) return;
+
+    const confirmed = await confirmAction({
+      title: `Hapus ${count} guru terpilih?`,
+      text: 'Data yang dihapus dapat dipulihkan melalui menu Trash.',
+      confirmButtonText: 'Hapus',
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    setBulkDeleting(true);
+    const ids = Array.from(selectedIds);
+    const results = await Promise.allSettled(ids.map((id) => API.delete(`/admin/guru/${id}`)));
+    const failedCount = results.filter((r) => r.status === 'rejected').length;
+    const successCount = ids.length - failedCount;
+
+    if (successCount > 0) {
+      showSuccess(`${successCount} guru berhasil dihapus`);
+    }
+    if (failedCount > 0) {
+      showError(`${failedCount} guru gagal dihapus`);
+    }
+
+    setBulkDeleting(false);
+    setSelectedIds(new Set());
+    setRefreshKey((k) => k + 1);
+  };
 
   const handleToggleStatus = async (guru) => {
     const active = guru.User?.is_active ?? guru.is_active ?? true;
@@ -87,6 +135,25 @@ function GuruManagement() {
   };
 
   const columns = [
+    {
+      key: 'select',
+      label: (
+        <input
+          type="checkbox"
+          checked={gurus.length > 0 && selectedIds.size === gurus.length}
+          onChange={toggleSelectAll}
+          aria-label="Pilih semua"
+        />
+      ),
+      render: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(row.id)}
+          onChange={() => toggleSelect(row.id)}
+          aria-label={`Pilih ${row.nama}`}
+        />
+      ),
+    },
     { key: 'nama', label: 'Nama' },
     { key: 'niy', label: 'NIY' },
     { key: 'no_telpon', label: 'No. Telepon', render: (row) => row.no_telpon || '-' },
@@ -187,6 +254,31 @@ function GuruManagement() {
           className="field-input flex-1 min-w-[200px]"
         />
       </FilterPanel>
+
+      {selectedIds.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-danger/25 bg-danger/10 p-3">
+          <span className="text-sm text-ink">{selectedIds.size} guru dipilih</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="btn-secondary"
+              disabled={bulkDeleting}
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="btn-primary bg-danger hover:bg-danger/90 flex items-center gap-2"
+            >
+              {bulkDeleting && <Spinner />}
+              {bulkDeleting ? 'Menghapus...' : `Hapus ${selectedIds.size} Guru`}
+            </button>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <Modal
